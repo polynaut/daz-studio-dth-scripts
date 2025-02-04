@@ -1,0 +1,599 @@
+var morphConfig = {
+    "Left Thigh Bend": {
+        "XRotate": {
+        	 "positive": [{
+                "morphName": "!Hip Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": 37.5
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "!Leg Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": 37.5
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }],
+            "negative": [{
+                "morphName": "!Hip Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "Hip Adjuster L",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 0,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "!Leg Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }]
+        }
+    },
+    "Right Thigh Bend": {
+        "XRotate": {
+        	 "positive": [{
+                "morphName": "!Hip Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": 37.5
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "!Leg Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": 37.5
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }],
+            "negative": [{
+                "morphName": "!Hip Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "Hip Adjuster R",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 0,
+                        "end": 1
+                    }
+                }
+            }, {
+                "morphName": "!Leg Bend Controller",
+                "range": {
+                    "angle": {
+                        "start": 0,
+                        "end": -115
+                    },
+                    "value": {
+                        "start": 1,
+                        "end": 1
+                    }
+                }
+            }]
+        }
+    }
+};
+
+var TARGET_NODES = Object.keys(morphConfig);
+
+// Initialize min/max trackers
+var minMax = {
+    XRotate: { min: null, max: null },
+    YRotate: { min: null, max: null },
+    ZRotate: { min: null, max: null }
+};
+
+function updateMinMax(axis, value) {
+    if (minMax[axis].min === null || value < minMax[axis].min) {
+        minMax[axis].min = value;
+    }
+    if (minMax[axis].max === null || value > minMax[axis].max) {
+        minMax[axis].max = value;
+    }
+}
+
+// Helper function to calculate morph value based on rotation
+// Only showing the modified calculateMorphValue function for clarity
+function calculateMorphValue(nodeName, axis, rotationValue, lastRotationValue) {
+    if (!morphConfig[nodeName] || !morphConfig[nodeName][axis]) {
+        return null;
+    }
+
+    var morphs = [];
+    var config = morphConfig[nodeName][axis];
+
+    // Special case for zero rotation - reset both morphs
+    if (rotationValue === 0) {
+        if (config.positive) {
+            config.positive.forEach(function (morph) {
+                morphs.push({
+                    name: morph.morphName,
+                    value: 0
+                });
+            });
+        }
+        if (config.negative) {
+            config.negative.forEach(function (morph) {
+                morphs.push({
+                    name: morph.morphName,
+                    value: 0
+                });
+            });
+        }
+        return morphs;
+    }
+
+    // Handle positive rotation
+    if (rotationValue > 0) {
+        if (config.positive) {
+            config.positive.forEach(function (morph) {
+                var range = morph.range;
+                var percent = (rotationValue - range.angle.start) / (range.angle.end - range.angle.start);
+                var morphValue = range.value.start + (percent * (range.value.end - range.value.start));
+                morphValue = Math.min(Math.max(morphValue, range.value.start), range.value.end);
+                morphs.push({
+                    name: morph.morphName,
+                    value: parseFloat(morphValue.toFixed(4))
+                });
+
+            });
+        }
+
+        if (lastRotationValue < 0) {
+            // Add zero values for negative morphs
+            if (config.negative) {
+                config.negative.forEach(function(morph) {
+                    morphs.push({
+                        name: morph.morphName,
+                        value: 0
+                    });
+                });
+            }
+        }
+    }
+    // Handle negative rotation
+    else if (rotationValue < 0) {
+        if (config.negative) {
+            config.negative.forEach(function (morph) {
+                var range = morph.range;
+                var percent = Math.abs((rotationValue - range.angle.start) / (range.angle.end - range.angle.start));
+                var morphValue = range.value.start + (percent * (range.value.end - range.value.start));
+                morphValue = Math.min(Math.max(morphValue, range.value.start), range.value.end);
+                morphs.push({
+                    name: morph.morphName,
+                    value: parseFloat(morphValue.toFixed(4))
+                });
+
+            });
+        }
+
+        if (lastRotationValue > 0) {
+            // Add zero values for positive morphs
+            if (config.positive) {
+                config.positive.forEach(function(morph) {
+                    morphs.push({
+                        name: morph.morphName,
+                        value: 0
+                    });
+                });
+            }
+        }
+    }
+
+    return morphs.length > 0 ? morphs : null;
+}
+
+// Initialize output data structure
+var outputData = {
+    keyframes: {
+        XRotate: [],
+        YRotate: [],
+        ZRotate: []
+    }
+};
+
+var timeStep = Scene.getTimeStep();
+var animRange = Scene.getAnimRange();
+var startFrame = animRange.start / timeStep;
+var endFrame = animRange.end / timeStep;
+
+function getFrameValue(prop, k) {
+    var result = 0;
+    try {
+        var keyTime = prop.getKeyTime(k);
+        if (keyTime) {
+            var value = prop.getDoubleValue(keyTime);
+            result = parseFloat(value.toFixed(4));
+        }
+    } catch (e) {
+        // ignore
+    } finally {
+        return result;
+    }
+}
+
+print("Timeline Analysis:");
+print("Start Frame: " + startFrame);
+print("End Frame: " + endFrame);
+print("Time Step: " + timeStep);
+print("----------------------------------------");
+
+// Get all nodes in the scene
+var nodes = Scene.getNodeList();
+
+// Track total keyframes found
+var totalKeyframes = 0;
+
+for (var n = 0; n < nodes.length; n++) {
+    var node = nodes[n];
+    var nodeLabel = node.getLabel();
+
+    if (TARGET_NODES.indexOf(nodeLabel) === -1) {
+        continue;
+    }
+
+    var props = node.getPropertyList();
+
+    for (var i = 0; i < props.length; i++) {
+        var prop = props[i];
+
+        if (prop.canAnimate() && prop.hasKeys()) {
+            var numKeys = prop.getNumKeys();
+            var propName = prop.getName();
+
+            if (numKeys > 1 && (propName === "XRotate" || propName === "ZRotate" || propName === "YRotate")) {
+                for (var k = 0; k < numKeys; k++) {
+                    var keyTime = prop.getKeyTime(k);
+                    var frame = keyTime / timeStep;
+
+                    if (prop.getKeyInterpolationType) {
+                        var interp = prop.getKeyInterpolationType(k);
+
+                        if (interp === DzFloatProperty.LINEAR_INTERP) {
+                            var rotationValue = getFrameValue(prop, k);
+                            updateMinMax(propName, rotationValue);
+                            totalKeyframes++;
+
+                            var keyframeData = {
+                                frame: parseInt(frame.toFixed(0)),
+                                rotation: rotationValue
+                            };
+
+                            // Calculate and add morph values if available
+                            var morphValues = calculateMorphValue(nodeLabel, propName, rotationValue, getFrameValue(prop, k - 1));
+                            if (morphValues && morphValues.length > 0) {
+                                keyframeData.morphs = morphValues;
+                            }
+
+                            outputData.keyframes[propName].push(keyframeData);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function fillKeyframeGaps(outputData) {
+    ['XRotate', 'YRotate', 'ZRotate'].forEach(function(axis) {
+        if (outputData.keyframes[axis].length < 2) return;
+        
+        var filledKeyframes = [];
+        for (var i = 0; i < outputData.keyframes[axis].length - 1; i++) {
+            var current = outputData.keyframes[axis][i];
+            var next = outputData.keyframes[axis][i + 1];
+            
+            // Add current frame
+            filledKeyframes.push(current);
+            
+            // Check if there's a gap and if rotations are identical
+            if (next.frame - current.frame > 1 && current.rotation === next.rotation && (current.rotation !== 0)) {
+                // Fill the gap with frames
+                for (var frame = current.frame + 1; frame < next.frame; frame++) {
+                    var newFrame = {
+	                    type: "fillGap",
+                        frame: frame,
+                        rotation: current.rotation
+                    };
+                    
+                    if (current.morphs) {
+                        newFrame.morphs = [];
+                        for (var j = 0; j < current.morphs.length; j++) {
+                            newFrame.morphs.push({
+                                name: current.morphs[j].name,
+                                value: current.morphs[j].value
+                            });
+                        }
+                    }
+                    
+                    filledKeyframes.push(newFrame);
+                }
+            }
+        }
+        
+        // Add the last frame
+        filledKeyframes.push(outputData.keyframes[axis][outputData.keyframes[axis].length - 1]);
+        
+        // Replace the original array with filled one
+        outputData.keyframes[axis] = filledKeyframes;
+    });
+    
+    return outputData;
+}
+
+function setControllerKeyframe(prop, frame, value) {
+    var timeStep = Scene.getTimeStep();
+    var time = timeStep * frame;
+
+    // First check if we can animate
+    if (!prop.canAnimate()) {
+        print("Property cannot be animated!");
+        return false;
+    }
+
+    // Set the value at the specific time
+    prop.setDoubleValue(value);
+    
+    // Create the keyframe
+    if (prop.addKey) {
+        prop.addKey(time);
+    } else {
+        // Alternative method if addKey isn't available
+        prop.setValue(time, value);
+    }
+    
+    // Set interpolation type (optional)
+    // Check if we have the newer or older API version
+    var keyIndex = prop.findKeyIndex ? prop.findKeyIndex(time) : prop.getKeyIndex(time);
+    if (prop.setKeyInterpolationType) {
+        prop.setKeyInterpolationType(keyIndex, DzFloatProperty.LINEAR_INTERP);
+    } else if (prop.setKeyInterpolation) {
+        prop.setKeyInterpolation(keyIndex, DzFloatProperty.LINEAR_INTERP);
+    }
+    
+    return true;
+}
+
+function applyMorphKeyframes(outputData) {
+    var scene = Scene;
+    var selectedNode = scene.getPrimarySelection();
+    var timeStep = Scene.getTimeStep();
+    
+    if (!selectedNode) {
+        print("No node selected");
+        return;
+    }
+    
+    if (!selectedNode.getLabel().match(/Genesis 8\.1 Female|Genesis 8\.1 Male|Genesis 9/)) {
+        print("Selected node is not a Genesis figure");
+        return;
+    }
+
+    var obj = selectedNode.getObject();
+    var props = selectedNode.getPropertyList();
+    beginUndo();
+    
+    // Process each axis's keyframes
+    ['XRotate', 'YRotate', 'ZRotate'].forEach(function(axis) {
+        var frames = outputData.keyframes[axis];
+        if (!frames || frames.length === 0) return;
+        
+        frames.forEach(function(frameData) {
+            if (!frameData.morphs) return;
+            
+            frameData.morphs.forEach(function(morph) {
+                var morphMod = null;
+                for (var m = 0; m < obj.getNumModifiers(); m++) {
+                    if (obj.getModifier(m).getLabel() === morph.name) {
+                        morphMod = obj.getModifier(m);
+                        break;
+                    }
+                }
+                
+                if (morphMod) {
+                    var channel = morphMod.getValueChannel();
+                    channel.setValue(timeStep * frameData.frame, morph.value);
+                    print("Frame " + frameData.frame + ": Set Morph " + morph.name + " = " + morph.value);
+                } else {
+                    var controllerProp = null;
+    
+                    // Find the controller property
+                    for (var i = 0; i < props.length; i++) {
+                        if (props[i].getName() === morph.name) {
+                            controllerProp = props[i];
+                            break;
+                        }
+                    }
+
+                    if (!controllerProp) {
+                        print("Controller '" + morph.name + "' not found!");
+                        return false;
+                    }
+                    
+                    // Begin undo action
+                    beginUndo();
+                    
+                    // Set each keyframe
+                    print("Frame " + frameData.frame + ": Set Controller " + morph.name + " = " + morph.value);
+                    setControllerKeyframe(controllerProp, frameData.frame, morph.value);
+                    
+                    // Accept the undo action
+                    acceptUndo("Animate Controller");
+                    
+                    return true;
+                }
+            });
+        });
+    });
+    
+    acceptUndo("Apply Morph Keyframes");
+}
+
+function cleanupMorphs(outputData) {
+    var scene = Scene;
+    var selectedNode = scene.getPrimarySelection();
+    var timeStep = Scene.getTimeStep();
+    
+    if (!selectedNode || !selectedNode.getLabel().match(/Genesis 8\.1 Female|Genesis 8\.1 Male|Genesis 9/)) {
+        print("Please select a Genesis figure");
+        return;
+    }
+
+    beginUndo();
+    
+    var obj = selectedNode.getObject();
+    var morphNames = {};
+    var timePoints = {};
+    
+    // Get timeline range
+    var animRange = Scene.getAnimRange();
+    var startFrame = Math.floor(animRange.start / timeStep);
+    var endFrame = Math.ceil(animRange.end / timeStep);
+    
+    print("Checking frames " + startFrame + " to " + endFrame);
+    
+    // Collect morph names from config
+    for (var node in morphConfig) {
+        for (var axis in morphConfig[node]) {
+            var config = morphConfig[node][axis];
+            if (config.positive) {
+                config.positive.forEach(function(m) {
+                    morphNames[m.morphName] = true;
+                    print("Tracking morph: " + m.morphName);
+                });
+            }
+            if (config.negative) {
+                config.negative.forEach(function(m) {
+                    morphNames[m.morphName] = true;
+                    print("Tracking morph: " + m.morphName);
+                });
+            }
+        }
+    }
+
+    // Check every frame in timeline
+    for (var frame = startFrame; frame <= endFrame; frame++) {
+        var time = frame * timeStep;
+        
+        for (var morphName in morphNames) {
+            for (var m = 0; m < obj.getNumModifiers(); m++) {
+                var mod = obj.getModifier(m);
+                if (mod.getLabel() === morphName) {
+                    var channel = mod.getValueChannel();
+                    var currentValue = channel.getValue(time);
+                    
+                    if (Math.abs(currentValue) > 0.0001) { // Non-zero value found
+                        // Find expected value from outputData
+                        var expectedValue = 0;
+                        var found = false;
+                        
+                        ['XRotate', 'YRotate', 'ZRotate'].forEach(function(axis) {
+                            outputData.keyframes[axis].forEach(function(frameData) {
+                                if (frameData.frame === frame && frameData.morphs) {
+                                    frameData.morphs.forEach(function(morph) {
+                                        if (morph.name === morphName) {
+                                            expectedValue = morph.value;
+                                            found = true;
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                        
+                        if (!found) {
+                            print("Fixing frame " + frame + ": Setting " + morphName + " to 0 (was " + currentValue.toFixed(4) + ")");
+                            channel.setValue(time, 0);
+                        } else if (Math.abs(currentValue - expectedValue) > 0.0001) {
+                            print("Fixing frame " + frame + ": Setting " + morphName + " to " + expectedValue.toFixed(4) + " (was " + currentValue.toFixed(4) + ")");
+                            channel.setValue(time, expectedValue);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    acceptUndo("Fix Morph Values");
+}
+
+// Sort each axis array by frame number
+outputData.keyframes.XRotate.sort(function (a, b) { return a.frame - b.frame; });
+outputData.keyframes.YRotate.sort(function (a, b) { return a.frame - b.frame; });
+outputData.keyframes.ZRotate.sort(function (a, b) { return a.frame - b.frame; });
+
+outputData = fillKeyframeGaps(outputData);
+// Output the JSON
+print("\nKeyframe Data:");
+print("----------------------------------------");
+print(JSON.stringify(outputData, null, 2));
+
+applyMorphKeyframes(outputData);
+cleanupMorphs(outputData);
+
+// Output min/max analysis
+print("\nValue Ranges:");
+print("----------------------------------------");
+print("X Rotation: " + (minMax.XRotate.min !== null ? minMax.XRotate.min.toFixed(4) + " to " + minMax.XRotate.max.toFixed(4) : "No keyframes"));
+print("Y Rotation: " + (minMax.YRotate.min !== null ? minMax.YRotate.min.toFixed(4) + " to " + minMax.YRotate.max.toFixed(4) : "No keyframes"));
+print("Z Rotation: " + (minMax.ZRotate.min !== null ? minMax.ZRotate.min.toFixed(4) + " to " + minMax.ZRotate.max.toFixed(4) : "No keyframes"));
+print("\nTotal linear keyframes found: " + totalKeyframes);
+

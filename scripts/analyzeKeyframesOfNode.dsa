@@ -1,0 +1,122 @@
+// DAZ Studio script to list all keyframes and their values
+// ===== CONFIGURATION =====
+var TARGET_NODE = "Left Thigh Bend"; // Change this to filter for specific node/bone
+// ========================
+
+var timeStep = Scene.getTimeStep();
+var animRange = Scene.getAnimRange();
+var startFrame = animRange.start / timeStep;
+var endFrame = animRange.end / timeStep;
+
+print("Timeline Analysis:");
+print("Filtering for node: " + TARGET_NODE);
+print("Start Frame: " + startFrame);
+print("End Frame: " + endFrame);
+print("Time Step: " + timeStep);
+print("----------------------------------------");
+
+// Get all nodes in the scene
+var nodes = Scene.getNodeList();
+
+// Track total keyframes found
+var totalKeyframes = 0;
+
+for(var n = 0; n < nodes.length; n++) {
+    var node = nodes[n];
+    var nodeLabel = node.getLabel();
+    
+    // Skip if this isn't our target node
+    if(nodeLabel !== TARGET_NODE) {
+        continue;
+    }
+    
+    // Get all properties that can be animated
+    var props = node.getPropertyList();
+    var hasKeys = false;
+    
+    for(var i = 0; i < props.length; i++) {
+        var prop = props[i];
+        
+        // Check if property can be animated and has keyframes
+        if(prop.canAnimate() && prop.hasKeys()) {
+            if(!hasKeys) {
+                print("\nNode: " + nodeLabel);
+                hasKeys = true;
+            }
+            
+            var propName = prop.getName();
+            print("\n  Property: " + propName);
+            
+            // Get all keyframes for this property
+            var numKeys = prop.getNumKeys();
+            totalKeyframes += numKeys;
+            
+            for(var k = 0; k < numKeys; k++) {
+                var keyTime = prop.getKeyTime(k);
+                var frame = keyTime / timeStep;
+                var value = prop.getDoubleValue(keyTime);
+                
+                // Get interpolation type if available
+                var interpType = "Unknown";
+                if(prop.getKeyInterpolationType) {
+                    var interp = prop.getKeyInterpolationType(k);
+                    switch(interp) {
+                        case DzFloatProperty.LINEAR_INTERP:
+                            interpType = "Linear";
+                            break;
+                        case DzFloatProperty.CONSTANT_INTERP:
+                            interpType = "Constant";
+                            break;
+                        case DzFloatProperty.TCB_INTERP:
+                            interpType = "TCB";
+                            break;
+                        case DzFloatProperty.HERMITE_INTERP:
+                            interpType = "Hermite";
+                            break;
+                    }
+                }
+                
+                print("    Frame " + frame.toFixed(0) + ": " + value.toFixed(4) + " (" + interpType + ")");
+            }
+        }
+    }
+    
+    // Check for modifiers with keyframes
+    var nodeObj = node.getObject();
+    if(nodeObj) {
+        var numMods = nodeObj.getNumModifiers();
+        for(var m = 0; m < numMods; m++) {
+            var modifier = nodeObj.getModifier(m);
+            var modProps = modifier.getPropertyList();
+            var hasModKeys = false;
+            
+            for(var p = 0; p < modProps.length; p++) {
+                var modProp = modProps[p];
+                
+                if(modProp.canAnimate() && modProp.hasKeys()) {
+                    if(!hasModKeys) {
+                        print("\n  Modifier: " + modifier.getName());
+                        hasModKeys = true;
+                    }
+                    
+                    var modPropName = modProp.getName();
+                    print("\n    Property: " + modPropName);
+                    
+                    var numModKeys = modProp.getNumKeys();
+                    totalKeyframes += numModKeys;
+                    
+                    for(var mk = 0; mk < numModKeys; mk++) {
+                        var modKeyTime = modProp.getKeyTime(mk);
+                        var modFrame = modKeyTime / timeStep;
+                        var modValue = modProp.getDoubleValue(modKeyTime);
+                        
+                        print("      Frame " + modFrame.toFixed(0) + ": " + modValue.toFixed(4));
+                    }
+                }
+            }
+        }
+    }
+}
+
+print("\n----------------------------------------");
+print("Total keyframes found for " + TARGET_NODE + ": " + totalKeyframes);

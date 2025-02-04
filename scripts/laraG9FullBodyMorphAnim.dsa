@@ -1,0 +1,294 @@
+// Get the current scene and selected node
+var scene = Scene;
+var selectedNode = scene.getPrimarySelection();
+
+// Get the time step for animation
+var timeStep = Scene.getTimeStep();
+print("Time step: " + timeStep.valueOf());
+
+// Array of morphs to animate with correct names
+// Each entry can be either a single morph or an array of linked morphs
+// Format: "MorphName:value" or ["Morph1:value", "Morph2:value"]
+// -> Set all Sonsy Weight Gain System Morphs to a max of 100% in the Parameter Settings in Daz Studio before executing the script
+// Deleted: GlutesRotateX
+var morphConfigs = [
+  "body_bs_BodyTone:1",
+  "SS_body_bs_Torso Muscular:1",
+  "SS_body_bs_Arms Muscular:1",
+  "SS_body_bs_Thigh Muscular:1",
+  "SS_body_bs_5 Belly Shape Muscular:1",
+
+  "body_bs_BreastsPerkSide:1",
+  "body_bs_BreastsCleavage:-0.3", // adjust min to -100%
+  "body_bs_BreastsHeavy:1",
+  "body_bs_BreastsNatural:0|-0.6", // adjust min to -100%
+  "GC Breast 10:1",
+  "body_bs_BreastsLarge:1",
+  "body_bs_BreastsLargeHigh:1",
+
+  "body_bs_NipplesAreolaeDepthFeminine:1",
+  "body_bs_NipplesAreolaeDiameterFeminine:1",
+
+  "body_bs_HipSize:1",
+
+  "body_bs_MassThighs:1",
+  "body_bs_TaperThighB:1",
+  "SS_body_bs_Thigh Inflate:1",
+  "SS_body_bs_Thigh Thickness Depth:1",
+  "SS_body_bs_Thigh Thickness Width:1",
+
+  "body_bs_GluteSize:1",
+  "body_bs_GluteWidth:1",
+  "SS_body_bs_Glute Inner Close:1",
+  "SS_body_bs_Glute Height Inner:1",
+  "SS_body_bs_Glute Width Upper:1",
+  "SS_body_bs_Glute Width Lower:1",
+
+  "SS_body_bs_Glute Height Upper:1",
+  "SS_body_bs_Glute Height Lower:1",
+  "SS_body_bs_Glute Angle:1",
+  "body_bs_GluteDepthLower:1",
+  "SS_body_bs_Glute UpDown:1",
+  "body_bs_GluteDepthUpper:1", // new
+  "SS_body_bs_Glute Size 1:1", // new
+  "SS_body_bs_Glute Size 2:1" // new
+];
+
+// Helper function to parse morph config entry
+function parseMorphConfig(config) {
+  if (Array.isArray(config)) {
+    return {
+      isLinked: true,
+      morphs: config.map(function(item) {
+        var parts = item.split(":");
+        var valueData = parts[1].split("|");
+        return {
+          name: parts[0],
+          value: parseFloat(valueData[0]),
+          resetValue: valueData.length > 1 ? parseFloat(valueData[1]) : 0
+        };
+      })
+    };
+  } else {
+    var parts = config.split(":");
+    var valueData = parts[1].split("|");
+    return {
+      isLinked: false,
+      morphs: [{
+        name: parts[0],
+        value: parseFloat(valueData[0]),
+        resetValue: valueData.length > 1 ? parseFloat(valueData[1]) : 0
+      }]
+    };
+  }
+}
+
+// Function to find all linked morph groups that contain a specific morph
+function findLinkedGroups(morphName) {
+  var groups = [];
+  for (var i = 0; i < morphConfigs.length; i++) {
+    var config = parseMorphConfig(morphConfigs[i]);
+    if (config.isLinked) {
+      // Check if this linked group contains our morph
+      var containsMorph = config.morphs.some(function(morph) {
+        return morph.name === morphName;
+      });
+      if (containsMorph) {
+        groups.push(config.morphs);
+      }
+    }
+  }
+  return groups;
+}
+
+// Function to set all morphs to their reset values at a specific frame
+function resetAllMorphsAtFrame(obj, frame) {
+  var processedMorphs = {}; // Track which morphs we've already processed
+  
+  for (var i = 0; i < morphConfigs.length; i++) {
+    var config = parseMorphConfig(morphConfigs[i]);
+    
+    config.morphs.forEach(function(morph) {
+      // Skip if we've already processed this morph
+      if (processedMorphs[morph.name]) {
+        return;
+      }
+      
+      var morphMod = null;
+      for (var m = 0; m < obj.getNumModifiers(); m++) {
+        if (obj.getModifier(m).getLabel() === morph.name) {
+          morphMod = obj.getModifier(m);
+          break;
+        }
+      }
+      
+      if (morphMod) {
+        var linkedGroups = findLinkedGroups(morph.name);
+        
+        if (linkedGroups.length > 0) {
+          // This morph is part of one or more linked groups
+          // We need to reset all morphs in these groups together
+          linkedGroups.forEach(function(group) {
+            group.forEach(function(linkedMorph) {
+              if (!processedMorphs[linkedMorph.name]) {
+                var linkedMorphMod = null;
+                for (var n = 0; n < obj.getNumModifiers(); n++) {
+                  if (obj.getModifier(n).getLabel() === linkedMorph.name) {
+                    linkedMorphMod = obj.getModifier(n);
+                    break;
+                  }
+                }
+                
+                if (linkedMorphMod) {
+                  var channel = linkedMorphMod.getValueChannel();
+                  channel.setValue(timeStep * frame, linkedMorph.resetValue);
+                  processedMorphs[linkedMorph.name] = true;
+                  print("Reset linked morph " + linkedMorph.name + " to " + linkedMorph.resetValue);
+                }
+              }
+            });
+          });
+        } else {
+          // This is a standalone morph
+          var channel = morphMod.getValueChannel();
+          channel.setValue(timeStep * frame, morph.resetValue);
+          processedMorphs[morph.name] = true;
+          print("Reset standalone morph " + morph.name + " to " + morph.resetValue);
+        }
+      }
+    });
+  }
+}
+
+// Calculate total frames needed (accounting for linked morphs counting as one frame)
+var totalMorphFrames = morphConfigs.length;
+
+// First, extend the timeline to accommodate our morphs
+var currentRange = Scene.getAnimRange();
+var currentFrame = Scene.getFrame(); // Get current frame position
+var framesNeeded = totalMorphFrames + 2; // +2 for cleanup frames before and after
+
+// Calculate new end point
+var newEndPoint = currentRange.start + timeStep * (currentFrame + framesNeeded);
+if (newEndPoint > currentRange.end) {
+  // Only extend if we need more frames
+  var newTimeRange = new DzTimeRange(currentRange.start, newEndPoint);
+  Scene.setAnimRange(newTimeRange);
+
+  var oldFrames = currentRange.end / timeStep;
+  var newFrames = newEndPoint / timeStep;
+  print(
+    "Timeline extended from " +
+      oldFrames +
+      " frames to " +
+      newFrames +
+      " frames"
+  );
+}
+
+// Track missing morphs and all found morphs
+var missingMorphs = [];
+var allFoundMorphs = [];
+
+// Check if there is a selected node
+if (selectedNode) {
+  var label = selectedNode.getLabel();
+  print("Selected node label: " + label);
+
+  // Check if the node label corresponds to known figure names
+  if (label === "Genesis 8.1 Female" || label === "Genesis 8.1 Male" || label === "Genesis 9") {
+    print("Found figure: " + label);
+    beginUndo();
+
+    // Get the object to access modifiers
+    var obj = selectedNode.getObject();
+    var numMods = obj.getNumModifiers();
+    print("Number of modifiers found: " + numMods);
+
+    // First, collect all available morph names
+    for (var m = 0; m < numMods; m++) {
+      var modLabel = obj.getModifier(m).getLabel();
+      allFoundMorphs.push(modLabel);
+    }
+
+    // Use current frame as start frame
+    var startFrame = currentFrame;
+    print("Starting at frame: " + startFrame);
+    var endFrame = startFrame + totalMorphFrames + 1;
+
+    // Reset frames
+    Scene.setFrame(startFrame - 1);
+    resetAllMorphsAtFrame(obj, startFrame - 1);
+
+    for (var frame = startFrame; frame < endFrame; frame++) {
+      Scene.setFrame(frame);
+      resetAllMorphsAtFrame(obj, frame);
+    }
+
+    // Then set each morph or morph group to its target value at its specific frame
+    for (var i = 0; i < morphConfigs.length; i++) {
+      var config = parseMorphConfig(morphConfigs[i]);
+      var targetFrame = startFrame + i;
+      Scene.setFrame(targetFrame);
+
+      // Ensure we set all morphs at exactly the same frame
+      var morphsToSet = [];
+
+      // First, gather all morphs
+      config.morphs.forEach(function(morph) {
+        var currentMorph = null;
+        for (var m = 0; m < numMods; m++) {
+          if (obj.getModifier(m).getLabel() === morph.name) {
+            currentMorph = obj.getModifier(m);
+            break;
+          }
+        }
+
+        if (currentMorph) {
+          morphsToSet.push({
+            morph: currentMorph,
+            name: morph.name,
+            value: morph.value
+          });
+        } else {
+          missingMorphs.push(morph.name);
+          print("⚠️ Morph not found: " + morph.name);
+        }
+      });
+
+      // Then set all values at once for this frame
+      morphsToSet.forEach(function(morphData) {
+        var valueChannel = morphData.morph.getValueChannel();
+        valueChannel.setValue(timeStep * targetFrame, morphData.value);
+        print(
+          "Frame " +
+            targetFrame +
+            ": Set " +
+            morphData.name +
+            " = " +
+            morphData.value
+        );
+      });
+    }
+
+    acceptUndo("Apply Morph Keyframes");
+
+    // Return to the start frame
+    Scene.setFrame(startFrame);
+
+    // If there were any missing morphs, print all available morphs
+    if (missingMorphs.length > 0) {
+      print(
+        "\n⚠️ Some morphs were not found. Here is a complete list of all available morphs:"
+      );
+      allFoundMorphs.sort(); // Sort alphabetically
+      for (var i = 0; i < allFoundMorphs.length; i++) {
+        print("  " + allFoundMorphs[i]);
+      }
+    }
+  } else {
+    print("The selected node is not recognized as a Genesis 8.1 figure.");
+  }
+} else {
+  print("No nodes are selected.");
+}
