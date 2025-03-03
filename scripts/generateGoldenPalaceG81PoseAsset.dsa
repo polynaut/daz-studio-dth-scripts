@@ -1,0 +1,407 @@
+// DAZ Studio version 4.23.0.1 filetype DAZ Script
+
+function findControl(selectedNode, obj, controlName, type) {
+    if (type === "pose") {
+        // Check node parameters for poses
+        var numParams = selectedNode.getNumProperties();
+        for (var p = 0; p < numParams; p++) {
+            var param = selectedNode.getProperty(p);
+            if (param.getName() === controlName || param.getLabel() === controlName) {
+                return param;
+            }
+        }
+    } else if (type === "morph") {
+        // Check modifiers for morphs
+        for (var m = 0; m < obj.getNumModifiers(); m++) {
+            var mod = obj.getModifier(m);
+            if (mod.getLabel() === controlName) {
+                return mod;
+            }
+        }
+    }
+    return null;
+}
+
+function parseControlConfig(config) {
+    // Handle fence type directly
+    if (config.type === "fence") {
+        return {
+            isLinked: false,
+            isFence: true,
+            controls: []
+        };
+    }
+
+    if (Array.isArray(config)) {
+        return {
+            isLinked: true,
+            isFence: false,
+            controls: config.map(function (item) {
+                return {
+                    type: item.type,
+                    name: item.name,
+                    value: parseFloat(item.value),
+                    resetValue: item.reset !== undefined ? parseFloat(item.reset) : 0
+                };
+            })
+        };
+    } else {
+        return {
+            isLinked: false,
+            isFence: false,
+            controls: [{
+                type: config.type,
+                name: config.name,
+                value: parseFloat(config.value),
+                resetValue: config.reset !== undefined ? parseFloat(config.reset) : 0
+            }]
+        };
+    }
+}
+
+// Function to set all controls to their reset values at a specific frame
+function resetAllControlsAtFrame(controlConfigs, selectedNode, timeStep, obj, frame) {
+    var processedControls = {}; // Track which controls we've already processed
+
+    for (var i = 0; i < controlConfigs.length; i++) {
+        var config = parseControlConfig(controlConfigs[i]);
+
+        // Skip fence types as they don't have controls to reset
+        if (config.isFence) {
+            continue;
+        }
+
+        config.controls.forEach(function (control) {
+            // Skip if we've already processed this control
+            if (processedControls[control.name]) {
+                return;
+            }
+
+            var controlMod = findControl(selectedNode, obj, control.name, control.type);
+
+            if (controlMod) {
+                if (control.type === "pose") {
+                    controlMod.setValue(control.resetValue);
+                } else {
+                    var channel = controlMod.getValueChannel();
+                    channel.setValue(timeStep * frame, control.resetValue);
+                }
+                processedControls[control.name] = true;
+                print("Reset " + control.type + " " + control.name + " to " + control.resetValue);
+            }
+        });
+    }
+}
+
+function goToNLastFrame(nParam) {
+    var n = nParam || 1;
+    // Get the current animation range
+    var animRange = Scene.getAnimRange();
+
+    // Get the time step (duration of one frame)
+    var timeStep = Scene.getTimeStep();
+
+    // Calculate the last frame number
+    var lastFrame = Math.floor(animRange.end / timeStep);
+
+    // Calculate the second-to-last frame number
+    var secondLastFrame = lastFrame - n;
+
+    // Set the current frame to the second-to-last frame
+    Scene.setFrame(secondLastFrame);
+}
+
+function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
+    var selectedNode = oNodeRoot;
+
+    // Get the time step for animation
+    var timeStep = Scene.getTimeStep();
+    print("Time step: " + timeStep.valueOf());
+
+    // Calculate total frames needed (accounting for linked controls counting as one frame)
+    var totalFrames = controlConfigs.length;
+
+    // First, extend the timeline to accommodate our controls
+    var currentRange = Scene.getAnimRange();
+    var currentFrame = Scene.getFrame(); // Get current frame position
+    var framesNeeded = totalFrames + 2; // +2 for cleanup frames before and after
+
+    // Calculate new end point
+    var newEndPoint = currentRange.start + timeStep * (currentFrame + framesNeeded);
+    if (newEndPoint > currentRange.end) {
+        // Only extend if we need more frames
+        var newTimeRange = new DzTimeRange(currentRange.start, newEndPoint);
+        Scene.setAnimRange(newTimeRange);
+
+        var oldFrames = currentRange.end / timeStep;
+        var newFrames = newEndPoint / timeStep;
+        print(
+            "Timeline extended from " +
+            oldFrames +
+            " frames to " +
+            newFrames +
+            " frames"
+        );
+    }
+
+    // Track missing controls and all found controls
+    var missingControls = [];
+    var allFoundControls = [];
+
+    // Check if there is a selected node
+    if (selectedNode) {
+        var label = selectedNode.getLabel();
+        print("Selected node label: " + label);
+
+        // Get the object to access controls
+        var obj = selectedNode.getObject();
+        var numMods = obj.getNumModifiers();
+        print("Number of modifiers found: " + numMods);
+
+        // Check both modifiers and parameters for controls
+        print("\nSearching for controls containing 'Together' or 'Apart':");
+
+        // Check modifiers (morphs)
+        for (var m = 0; m < numMods; m++) {
+            var mod = obj.getModifier(m);
+            var modLabel = mod.getLabel() || "";
+            allFoundControls.push(modLabel);
+        }
+
+        // Check parameters (poses)
+        var numParams = selectedNode.getNumProperties();
+        print("\nChecking " + numParams + " parameters for poses...");
+        for (var p = 0; p < numParams; p++) {
+            var param = selectedNode.getProperty(p);
+            var paramLabel = param.getLabel() || "";
+            allFoundControls.push(paramLabel);
+        }
+
+        // Use current frame as start frame
+        var startFrame = currentFrame;
+        print("Starting at frame: " + startFrame);
+        var endFrame = startFrame + totalFrames + 1;
+
+        // Reset frames
+        Scene.setFrame(startFrame - 1);
+        resetAllControlsAtFrame(controlConfigs, selectedNode, timeStep, obj, startFrame - 1);
+
+        for (var frame = startFrame; frame < endFrame; frame++) {
+            Scene.setFrame(frame);
+            resetAllControlsAtFrame(controlConfigs, selectedNode, timeStep, obj, frame);
+        }
+
+        // Then set each control or control group to its target value at its specific frame
+        for (var i = 0; i < controlConfigs.length; i++) {
+            var config = parseControlConfig(controlConfigs[i]);
+            var targetFrame = startFrame + i;
+            Scene.setFrame(targetFrame);
+
+            // If this is a fence type, just move to the next frame without setting any controls
+            if (config.isFence) {
+                print("Frame " + targetFrame + ": Fence (empty keyframe)");
+                continue;
+            }
+
+            // Ensure we set all controls at exactly the same frame
+            var controlsToSet = [];
+
+            // First, gather all controls
+            config.controls.forEach(function (control) {
+                var currentControl = findControl(selectedNode, obj, control.name, control.type);
+
+                if (currentControl) {
+                    controlsToSet.push({
+                        control: currentControl,
+                        name: control.name,
+                        value: control.value,
+                        type: control.type
+                    });
+                } else {
+                    missingControls.push(control.name);
+                    print("⚠️ Control not found: " + control.name);
+                }
+            });
+
+            // Then set all values at once for this frame
+            controlsToSet.forEach(function (controlData) {
+                if (controlData.type === "pose") {
+                    controlData.control.setValue(controlData.value);
+                } else {
+                    var valueChannel = controlData.control.getValueChannel();
+                    valueChannel.setValue(timeStep * targetFrame, controlData.value);
+                }
+                print(
+                    "Frame " +
+                    targetFrame +
+                    ": Set " +
+                    controlData.type +
+                    " " +
+                    controlData.name +
+                    " = " +
+                    controlData.value
+                );
+            });
+        }
+
+        goToNLastFrame(2);
+
+        // If there were any missing controls, print all available controls
+        if (missingControls.length > 0) {
+            print(
+                "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
+            );
+            allFoundControls.sort(); // Sort alphabetically
+            for (var i = 0; i < allFoundControls.length; i++) {
+                print("  " + allFoundControls[i]);
+            }
+        }
+    } else {
+        print("No nodes are selected.");
+    }
+}
+
+
+
+function addFenceFrameAtEndOfTimeline() {
+    // Get the selected figure
+    var oNode = Scene.getPrimarySelection();
+    if (!oNode) {
+        MessageBox.information("Please select a figure in the Scene", "No Selection", "&OK");
+    } else {
+        // Get the current animation range
+        var animRange = Scene.getAnimRange();
+
+        // Get the time step (duration of one frame)
+        var timeStep = Scene.getTimeStep();
+
+        // Calculate the last frame number
+        var lastFrame = Math.floor(animRange.end / timeStep);
+
+        // Set the current frame to the last frame
+        Scene.setFrame(lastFrame);
+
+        // Add 1 frame to the timeline
+        addFramesToAnim(1);
+
+        // Get the current frame
+        var currentFrame = Scene.getFrame();
+
+        // Memorize and restore pose using fence poses functionality
+        // This is equivalent to Edit -> Zero -> Zero Figure Pose -> Restore Pose
+        setFencePoses(oNode, currentFrame, [currentFrame + 1]);
+
+        // Optionally move to the new frame
+        Scene.setFrame(currentFrame + 1);
+    }
+}
+
+// https://docs.google.com/spreadsheets/d/1dtyecSuk-GxLPn97I6JsYiqvP6xrRNmuRkOrU8oLsGM/edit?gid=764910584#gid=764910584
+function getControlConfig() {
+    return [
+        { type: "fence" }, // 319
+        { type: "morph", name: "LabiaMajora_Pinch1 Left", value: 1.1 }, // 320
+        { type: "morph", name: "LabiaMajora_Pinch1 Left", value: -0.5 },// 321
+        { type: "morph", name: "LabiaMajora_Pinch2 Left", value: 1.5 }, // 322
+        { type: "morph", name: "LabiaMajora_Pinch2 Left", value: -0.5 },// 323
+        { type: "morph", name: "LabiaMajora_Push1 Left", value: 1 },   // 324
+        { type: "morph", name: "LabiaMajora_Push1 Left", value: -1 },   // 325
+        { type: "morph", name: "LabiaMajora_Push2 Left", value: 1 },   // 326
+        { type: "morph", name: "LabiaMajora_Push2 Left", value: -1 },   // 327
+        { type: "morph", name: "LabiaMajora_Push3 Left", value: 1 },   // 328
+        { type: "morph", name: "LabiaMajora_Push3 Left", value: -1 },   // 329
+
+        { type: "morph", name: "LabiaMajora_Pinch1Right", value: 1.1 }, // 332
+        { type: "morph", name: "LabiaMajora_Pinch1Right", value: -0.5 },// 333
+        { type: "morph", name: "LabiaMajora_Pinch2 Right", value: 1.5 }, // 334
+        { type: "morph", name: "LabiaMajora_Pinch2 Right", value: -0.5 },// 335
+        { type: "morph", name: "LabiaMajora_Push1 Right", value: 1 },   // 336
+        { type: "morph", name: "LabiaMajora_Push1 Right", value: -1 },   // 337
+        { type: "morph", name: "LabiaMajora_Push2 Right", value: 1 },   // 338
+        { type: "morph", name: "LabiaMajora_Push2 Right", value: -1 },   // 339
+        { type: "morph", name: "LabiaMajora_Push3 Right", value: 1 },   // 340
+        { type: "morph", name: "LabiaMajora_Push3 Right", value: -1 },   // 341
+
+        { type: "morph", name: "LabiaMinora_Pinch1Left", value: 1 },   // 344
+        { type: "morph", name: "LabiaMinora_Pinch1Left", value: -1 },   // 345
+        { type: "morph", name: "LabiaMinora_Pinch2Left", value: 1 },   // 346
+        { type: "morph", name: "LabiaMinora_Pinch2Left", value: -1 },   // 347
+        { type: "morph", name: "LabiaMinora_MoveLeft01", value: 4 },   // 348
+        { type: "morph", name: "LabiaMinora_MoveLeft01", value: -4 },   // 349
+        { type: "morph", name: "LabiaMinora_MoveLeft02", value: 4 },   // 350
+        { type: "morph", name: "LabiaMinora_MoveLeft02", value: -4 },   // 351
+        { type: "morph", name: "LabiaMinora_MoveLeft03", value: 4 },   // 352
+        { type: "morph", name: "LabiaMinora_MoveLeft03", value: -4 },   // 353
+        { type: "morph", name: "LabiaMinora_MoveLeft04", value: 4 },   // 354
+        { type: "morph", name: "LabiaMinora_MoveLeft04", value: -4 },   // 355
+        { type: "morph", name: "LabiaMinora_MoveLeft05", value: 4 },   // 356
+        { type: "morph", name: "LabiaMinora_MoveLeft05", value: -4 },   // 357
+        { type: "morph", name: "LabiaMinora_MoveLeft06", value: 4 },   // 358
+        { type: "morph", name: "LabiaMinora_MoveLeft06", value: -4 },   // 359
+        { type: "morph", name: "LabiaMinora_MoveLeft07", value: 4 },   // 360
+        { type: "morph", name: "LabiaMinora_MoveLeft07", value: -4 },   // 361
+        { type: "morph", name: "LabiaMinora_MoveLeft08", value: 4 },   // 362
+        { type: "morph", name: "LabiaMinora_MoveLeft08", value: -4 },   // 363
+        { type: "morph", name: "LabiaMinora_MoveLeft09", value: 4 },   // 364
+        { type: "morph", name: "LabiaMinora_MoveLeft09", value: -4 },   // 365
+        { type: "morph", name: "LabiaMinora_MoveLeft10", value: 4 },   // 366
+        { type: "morph", name: "LabiaMinora_MoveLeft10", value: -4 },   // 367
+        { type: "morph", name: "LabiaMinora_MoveLeft11", value: 4 },   // 368
+        { type: "morph", name: "LabiaMinora_MoveLeft11", value: -4 },   // 369
+
+        { type: "morph", name: "LabiaMinora_Pinch1Right", value: 1 },   // 378
+        { type: "morph", name: "LabiaMinora_Pinch1Right", value: -1 },   // 379
+        { type: "morph", name: "LabiaMinora_Pinch2Right", value: 1 },   // 380
+        { type: "morph", name: "LabiaMinora_Pinch2Right", value: -1 },   // 381
+        { type: "morph", name: "LabiaMinora_MoveRight01", value: 4 },   // 382
+        { type: "morph", name: "LabiaMinora_MoveRight01", value: -4 },   // 383
+        { type: "morph", name: "LabiaMinora_MoveRight02", value: 4 },   // 384
+        { type: "morph", name: "LabiaMinora_MoveRight02", value: -4 },   // 385
+        { type: "morph", name: "LabiaMinora_MoveRight03", value: 4 },   // 386
+        { type: "morph", name: "LabiaMinora_MoveRight03", value: -4 },   // 387
+        { type: "morph", name: "LabiaMinora_MoveRight04", value: 4 },   // 388
+        { type: "morph", name: "LabiaMinora_MoveRight04", value: -4 },   // 389
+        { type: "morph", name: "LabiaMinora_MoveRight05", value: 4 },   // 390
+        { type: "morph", name: "LabiaMinora_MoveRight05", value: -4 },   // 391
+        { type: "morph", name: "LabiaMinora_MoveRight06", value: 4 },   // 392
+        { type: "morph", name: "LabiaMinora_MoveRight06", value: -4 },   // 393
+        { type: "morph", name: "LabiaMinora_MoveRight07", value: 4 },   // 394
+        { type: "morph", name: "LabiaMinora_MoveRight07", value: -4 },   // 395
+        { type: "morph", name: "LabiaMinora_MoveRight08", value: 4 },   // 396
+        { type: "morph", name: "LabiaMinora_MoveRight08", value: -4 },   // 397
+        { type: "morph", name: "LabiaMinora_MoveRight09", value: 4 },   // 398
+        { type: "morph", name: "LabiaMinora_MoveRight09", value: -4 },   // 399
+        { type: "morph", name: "LabiaMinora_MoveRight10", value: 4 },   // 400
+        { type: "morph", name: "LabiaMinora_MoveRight10", value: -4 },   // 401
+        { type: "morph", name: "LabiaMinora_MoveRight11", value: 4 },   // 402
+        { type: "morph", name: "LabiaMinora_MoveRight11", value: -4 },   // 403
+
+        { type: "fence" },   // 414
+        { type: "morph", name: "Vagina_Open 3", value: 1 },   // 415
+        { type: "morph", name: "Vagina_Open_Front Stretch", value: 1 },   // 416
+        { type: "morph", name: "Vagina_Open_SideStretch", value: 1 },   // 417
+        { type: "fence" },   // 418
+        { type: "morph", name: "Anus_Open3", value: 1 },   // 419
+        { type: "morph", name: "Anus Gape_Out", value: 1 },   // 420
+        { type: "fence" },   // 421
+        { type: "morph", name: "Clitoris Inflate", value: 1 },   // 422
+    ];
+}
+
+beginUndo();
+
+Scene.setTime(0);
+
+var oNodeRoot = Scene.getPrimarySelection();
+
+var oNodeGP = oNodeRoot.findNodeChildByLabel("Golden Palace Gens");
+if (!oNodeGP) {
+    MessageBox.information("Error: Node `Golden Palace` not found in scene", "", "");
+    return false;
+}
+
+Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
+
+addMorphAnimationFrames(oNodeGP, getControlConfig());
+
+acceptUndo("DTH Workflow");
