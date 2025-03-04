@@ -1,102 +1,114 @@
 // DAZ Studio version 4.22.0.16 filetype DAZ Script
 
 var DTH_VERBOSE = false;
-var EPSILON = .0001;
+var EPSILON = 0.0001;
 
 function verbose() {
-	if (DTH_VERBOSE) {
-		print.apply(this, arguments);
-	}
+  if (DTH_VERBOSE) {
+    print.apply(this, arguments);
+  }
 }
+
 /**********************************************************************
-**********               */
+ **********               */
 function setLinearInterp(oNodes, startFrame, endFrame) {
+  // Set default to linear interpolation off the bat, so hopefully it doesn't need to be set later
+  Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
 
-	// Set default to linear interpolation off the bat, so hopefully it doesn't need to be set later
-	Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
-
-	startFrame = typeof startFrame !== 'undefined' ? startFrame : 0;
-	endFrame = typeof endFrame !== 'undefined' ? endFrame : 0;
-	var props = [];
-	for (var x = 0; x < oNodes.length; x++) {
-		var oNode = oNodes[x];
-		var oObj = oNode.getObject();
-		if (oObj) {
-			for (var i = 0; i < oObj.getNumModifiers(); i++) {
-				oMod = oObj.getModifier(i);
-				if (oMod && oMod.inherits("DzMorph")) {
-					oProp = oMod.getValueControl();
-					if (oProp && oProp.getNumKeys() > 1) {
-						props.push(oProp);
-					}
-				}
-			}
-		}
-		oNode.getPropertyList().forEach(function (oProp) {
-			if (oProp.getNumKeys() > 1) {
-				props.push(oProp)
-			}
-		});
-	}
-	print("Props and morphs:", props.length)
-	for (var i = 0; i < props.length; i++) {
-		var oProp = props[i];
-		for (var j = 0; j < oProp.getNumKeys(); j++) {
-			var keyTime = oProp.getKeyTime(j);
-			oProp.setKeyInterpolationType(j, DzFloatProperty.LINEAR_INTERP);
-			oProp.setValue(keyTime, oProp.getValue(keyTime), DzFloatProperty.LINEAR_INTERP);
-			print("Set interp to linear for", oProp.getLabel(), j, oProp.getKeyInterpolationType(j));
-		}
-	}
+  startFrame = typeof startFrame !== "undefined" ? startFrame : 0;
+  endFrame = typeof endFrame !== "undefined" ? endFrame : 0;
+  var props = [];
+  for (var x = 0; x < oNodes.length; x++) {
+    var oNode = oNodes[x];
+    var oObj = oNode.getObject();
+    if (oObj) {
+      for (var i = 0; i < oObj.getNumModifiers(); i++) {
+        oMod = oObj.getModifier(i);
+        if (oMod && oMod.inherits("DzMorph")) {
+          oProp = oMod.getValueControl();
+          if (oProp && oProp.getNumKeys() > 1) {
+            props.push(oProp);
+          }
+        }
+      }
+    }
+    oNode.getPropertyList().forEach(function (oProp) {
+      if (oProp.getNumKeys() > 1) {
+        props.push(oProp);
+      }
+    });
+  }
+  print("Props and morphs:", props.length);
+  for (var i = 0; i < props.length; i++) {
+    var oProp = props[i];
+    for (var j = 0; j < oProp.getNumKeys(); j++) {
+      var keyTime = oProp.getKeyTime(j);
+      oProp.setKeyInterpolationType(j, DzFloatProperty.LINEAR_INTERP);
+      oProp.setValue(
+        keyTime,
+        oProp.getValue(keyTime),
+        DzFloatProperty.LINEAR_INTERP
+      );
+      print(
+        "Set interp to linear for",
+        oProp.getLabel(),
+        j,
+        oProp.getKeyInterpolationType(j)
+      );
+    }
+  }
 }
 
 /**********************************************************************
- * Loads preset `sFilename` with `oTarget` node selected, at frame `startframe` 
+ * Loads preset `sFilename` with `oTarget` node selected, at frame `startframe`
  * startFrame = 0 		*/
 function loadPreset(sFilename, oTarget, startFrame) {
-	startFrame = typeof startFrame !== 'undefined' ? startFrame : 0;
-	oContentMgr = App.getContentMgr();
-	print("Loading", sFilename, "to", oTarget.getLabel(), "at frame", startFrame);
-	var newTime = Scene.getTimeStep() * startFrame;
-	Scene.selectAllNodes(false);
-	oTarget.select(true);
-	Scene.setPrimarySelection(oTarget);
-	Scene.setTime(newTime);
-	return oContentMgr.openFile(sFilename);
+  startFrame = typeof startFrame !== "undefined" ? startFrame : 0;
+  oContentMgr = App.getContentMgr();
+  print("Loading", sFilename, "to", oTarget.getLabel(), "at frame", startFrame);
+  var newTime = Scene.getTimeStep() * startFrame;
+  Scene.selectAllNodes(false);
+  oTarget.select(true);
+  Scene.setPrimarySelection(oTarget);
+  Scene.setTime(newTime);
+  return oContentMgr.openFile(sFilename);
 }
 
 /**********************************************************************
  *Sets total frames */
 function setTotalFrames(iTotalFrames) {
-	var oTimeRange = new DzTimeRange(0, iTotalFrames * Scene.getTimeStep());
-	print("Setting new time range:", oTimeRange.start, "to", oTimeRange.end);
-	Scene.setAnimRange(oTimeRange);
+  var oTimeRange = new DzTimeRange(0, iTotalFrames * Scene.getTimeStep());
+  print("Setting new time range:", oTimeRange.start, "to", oTimeRange.end);
+  Scene.setAnimRange(oTimeRange);
 }
 
 /**********************************************************************
  *Adds new frames to end of the anim play range. No arguments adds 1 frame.*/
 function addFramesToAnim(iNewFrames) {
-	iNewFrames = typeof iNewFrames !== 'undefined' ? iNewFrames : 1;
-	var oTimeRange = new DzTimeRange(0, Scene.getAnimRange().end + Scene.getTimeStep(0) * iNewFrames);
-	Scene.setAnimRange(oTimeRange);
+  iNewFrames = typeof iNewFrames !== "undefined" ? iNewFrames : 1;
+  var oTimeRange = new DzTimeRange(
+    0,
+    Scene.getAnimRange().end + Scene.getTimeStep(0) * iNewFrames
+  );
+  Scene.setAnimRange(oTimeRange);
 }
 
 /**********************************************************************
  *Memorizes figure for `oNode` at `iSourceFrame`, Restores Figure for each frame in `aTargetFrames`.*/
 function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
-	var timeStep = Scene.getTimeStep();
-	Scene.selectAllNodes(false);
-	oNode.select();
-	Scene.setPrimarySelection(oNode);
-	Scene.setTime(iSourceFrame * timeStep);
-	print("Memorizing figure for:", oNode.getLabel(), "at frame", iSourceFrame);
-	triggerAction("DzMemorizeFigureAction");
-	for (var i in aTargetFrames) {
-		var frame = aTargetFrames[i];
-		Scene.setTime(frame * timeStep);
-		print("Restoring figure for:", oNode.getLabel(), "at frame", frame);
-		triggerAction("DzRestoreFigureAction");
-	}
+  var timeStep = Scene.getTimeStep();
+  Scene.selectAllNodes(false);
+  oNode.select();
+  Scene.setPrimarySelection(oNode);
+  Scene.setTime(iSourceFrame * timeStep);
+  print("Memorizing figure for:", oNode.getLabel(), "at frame", iSourceFrame);
+  triggerAction("DzMemorizeFigureAction");
+  for (var i in aTargetFrames) {
+    var frame = aTargetFrames[i];
+    Scene.setTime(frame * timeStep);
+    print("Restoring figure for:", oNode.getLabel(), "at frame", frame);
+    triggerAction("DzRestoreFigureAction");
+  }
 }
 
 // function getKeysAtFrame(oNode, )
@@ -105,410 +117,507 @@ function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
  *Sets property `sPropName` on `oNode` to `fValue` at time `iFrame`.
  * iFrame = 0  		*/
 function setPropertyByName(oNode, sPropName, fValue, iFrame) {
-	iFrame = typeof iFrame !== 'undefined' ? iFrame : 0;
-	print("Setting property", sPropName, "to", fValue, "at frame", iFrame, "...");
-	oProp = oNode.findProperty(sPropName);
-	if (oProp && oProp.setValue(iFrame * Scene.getTimeStep(), fValue, DzProperty.Linear)) {
-		print("Succesfully set property", oProp.getLabel(), "to", fValue, "at frame", iFrame);
-		return true;
-	} else {
-		print("Failed to set property", oProp.getLabel(), "to", fValue, "at frame", iFrame);
-		return false;
-	}
-
+  iFrame = typeof iFrame !== "undefined" ? iFrame : 0;
+  print("Setting property", sPropName, "to", fValue, "at frame", iFrame, "...");
+  oProp = oNode.findProperty(sPropName);
+  if (
+    oProp &&
+    oProp.setValue(iFrame * Scene.getTimeStep(), fValue, DzProperty.Linear)
+  ) {
+    print(
+      "Succesfully set property",
+      oProp.getLabel(),
+      "to",
+      fValue,
+      "at frame",
+      iFrame
+    );
+    return true;
+  } else {
+    print(
+      "Failed to set property",
+      oProp.getLabel(),
+      "to",
+      fValue,
+      "at frame",
+      iFrame
+    );
+    return false;
+  }
 }
-
 
 /** deprecated - use loadPreset ***********************/
 function loadDufToNode(oNodeRoot, sDufPath, sChildLabel) {
-	var oChildNode;
-	if (sChildLabel)
-		oChildNode = oNodeRoot.findNodeChildByLabel(sChildLabel);
-	if (!oChildNode) {
-		Scene.setPrimarySelection(oNodeRoot);
-		print("Loading DUF: ", sDufPath, "to add", sChildLabel, "to node", oNodeRoot.getLabel(), "...");
-		if (oContentMgr.openFile(sDufPath)) {
-			print("Successfully loaded");
-			return true;
-		} else {
-			print("Failed to load DUF: ", sDufPath, "to add", sChildLabel, "to node", oNodeRoot.getLabel(), "...");
-			return false;
-		}
-	} else {
-		print(sChildLabel, "already exists on node:", oNodeRoot.getLabel());
-		return true;
-	}
+  var oChildNode;
+  if (sChildLabel) oChildNode = oNodeRoot.findNodeChildByLabel(sChildLabel);
+  if (!oChildNode) {
+    Scene.setPrimarySelection(oNodeRoot);
+    print(
+      "Loading DUF: ",
+      sDufPath,
+      "to add",
+      sChildLabel,
+      "to node",
+      oNodeRoot.getLabel(),
+      "..."
+    );
+    if (oContentMgr.openFile(sDufPath)) {
+      print("Successfully loaded");
+      return true;
+    } else {
+      print(
+        "Failed to load DUF: ",
+        sDufPath,
+        "to add",
+        sChildLabel,
+        "to node",
+        oNodeRoot.getLabel(),
+        "..."
+      );
+      return false;
+    }
+  } else {
+    print(sChildLabel, "already exists on node:", oNodeRoot.getLabel());
+    return true;
+  }
 }
 
 function getMorphPropFromNode(oNode, sMorphName) {
-	var oObj = oNode.getObject();
-	if (oObj) {
-		oMorph = oObj.findModifier(sMorphName);
-		if (oMorph) {
-			oProp = oMorph.getValueChannel(0);
-			return oProp;
-		}
-	}
+  var oObj = oNode.getObject();
+  if (oObj) {
+    oMorph = oObj.findModifier(sMorphName);
+    if (oMorph) {
+      oProp = oMorph.getValueChannel(0);
+      return oProp;
+    }
+  }
 }
 
 function addFrameData(frameDatas, keyData) {
-	var idx = keyData.frameIdx;
-	if (idx == undefined || idx == null)
-		return false;
-	if (frameDatas[idx] !== undefined)
-		frameDatas[idx].keyDatas.push(keyData);
-	else
-		frameDatas[idx] = { frameName: "", sectionName: "", keyDatas: [keyData] };
-	return true;
+  var idx = keyData.frameIdx;
+  if (idx == undefined || idx == null) return false;
+  if (frameDatas[idx] !== undefined) frameDatas[idx].keyDatas.push(keyData);
+  else
+    frameDatas[idx] = { frameName: "", sectionName: "", keyDatas: [keyData] };
+  return true;
 }
 
 function readPropsCSV(sFilename, frameDatas, iOffset) {
-	frameDatas = frameDatas || [];
-	iOffset = iOffset || 0;
+  frameDatas = frameDatas || [];
+  iOffset = iOffset || 0;
 
-	oFile = new DzFile(sFilename);
-	if (oFile.open(oFile.ReadOnly)) {
-		var i = 0;
-		while (!oFile.eof()) {
-			sLine = oFile.readLine();
-			verbose("parsing row", i, ":", sLine);
-			var row = sLine.split(",");
-			// first three values are relative frame number, sectionName, and frameName
-			if (row.length > 2) {
-				// we want absolute frame numbers, so add the offset here.
-				var frameNum = parseInt(row[0]) + iOffset;
-				if (!frameDatas[frameNum])
-					frameDatas[frameNum] = {
-						keyDatas: [],
-						sectionName: row[1],
-						frameName: row[2]
-					};
-				// take three values at a time
-				for (var j = 3; j + 2 < row.length; j += 3) {
-					var keyData = {
-						frameIdx: frameNum,
-						nodeName: row[j],
-						propName: row[j + 1],
-						propValue: row[j + 2]
-					};
-					addFrameData(frameDatas, keyData);
-					verbose("add frame data. frame:", frameNum, "prop:", row[j + 1]);
-				}
-			}
-			i++;
-		}
-		oFile.close();
-		print("added", i, "CSV frames from:", sFilename);
-	}
-	else {
-		print("ERROR: could not find or open file:", sFilename);
-	}
-	return frameDatas;
+  oFile = new DzFile(sFilename);
+  if (oFile.open(oFile.ReadOnly)) {
+    var i = 0;
+    while (!oFile.eof()) {
+      sLine = oFile.readLine();
+      verbose("parsing row", i, ":", sLine);
+      var row = sLine.split(",");
+      // first three values are relative frame number, sectionName, and frameName
+      if (row.length > 2) {
+        // we want absolute frame numbers, so add the offset here.
+        var frameNum = parseInt(row[0]) + iOffset;
+        if (!frameDatas[frameNum])
+          frameDatas[frameNum] = {
+            keyDatas: [],
+            sectionName: row[1],
+            frameName: row[2],
+          };
+        // take three values at a time
+        for (var j = 3; j + 2 < row.length; j += 3) {
+          var keyData = {
+            frameIdx: frameNum,
+            nodeName: row[j],
+            propName: row[j + 1],
+            propValue: row[j + 2],
+          };
+          addFrameData(frameDatas, keyData);
+          verbose("add frame data. frame:", frameNum, "prop:", row[j + 1]);
+        }
+      }
+      i++;
+    }
+    oFile.close();
+    print("added", i, "CSV frames from:", sFilename);
+  } else {
+    print("ERROR: could not find or open file:", sFilename);
+  }
+  return frameDatas;
 }
 
 function printCSV(frameDatas, sOutFilename) {
-	lines = [];
-	if (!frameDatas) {
-		print("ERROR: printCSV received null `frameDatas`");
-		return false;
-	}
-	for (i = 0; i < frameDatas.length; i++) {
-		var line;
-		var frameData = frameDatas[i];
-		if (frameData && frameData.keyDatas !== undefined) {
-			var keyDatas = frameData.keyDatas;
-			line = [i.toString(), frameData.sectionName || "", frameData.frameName || ""];
-			verbose("Frame", i, "length:", keyDatas.length);
-			for (j = 0; j < keyDatas.length; j++) {
-				var keyData = keyDatas[j];
-				line.push(keyData.nodeName, keyData.propName, keyData.propValue);
-			}
-			verbose("line length:", line.length);
-		}
-		else {
-			line = [i.toString(), "", ""];
-		}
-		lines.push(line.join(","));
-	}
+  lines = [];
+  if (!frameDatas) {
+    print("ERROR: printCSV received null `frameDatas`");
+    return false;
+  }
+  for (i = 0; i < frameDatas.length; i++) {
+    var line;
+    var frameData = frameDatas[i];
+    if (frameData && frameData.keyDatas !== undefined) {
+      var keyDatas = frameData.keyDatas;
+      line = [
+        i.toString(),
+        frameData.sectionName || "",
+        frameData.frameName || "",
+      ];
+      verbose("Frame", i, "length:", keyDatas.length);
+      for (j = 0; j < keyDatas.length; j++) {
+        var keyData = keyDatas[j];
+        line.push(keyData.nodeName, keyData.propName, keyData.propValue);
+      }
+      verbose("line length:", line.length);
+    } else {
+      line = [i.toString(), "", ""];
+    }
+    lines.push(line.join(","));
+  }
 
-	if (sOutFilename) {
-		oFile = new DzFile(sOutFilename);
-		if (oFile.open(oFile.WriteOnly, oFile.Truncate)) {
-
-			print("Writing to", sOutFilename);
-			for (var n = 0; n < lines.length; n++) {
-				print(lines[n]);
-				oFile.write(lines[n] + "\n");
-			}
-			oFile.close();
-		}
-	}
-	else {
-		for (var n = 0; n < lines.length; n++) {
-			print(lines[n]);
-		}
-	}
-
+  if (sOutFilename) {
+    oFile = new DzFile(sOutFilename);
+    if (oFile.open(oFile.WriteOnly, oFile.Truncate)) {
+      print("Writing to", sOutFilename);
+      for (var n = 0; n < lines.length; n++) {
+        print(lines[n]);
+        oFile.write(lines[n] + "\n");
+      }
+      oFile.close();
+    }
+  } else {
+    for (var n = 0; n < lines.length; n++) {
+      print(lines[n]);
+    }
+  }
 }
 
 /** **************************************************************************/
 function createMorphFrames(oNode, morphConfigs, iStartFrame) {
-	print("Entering createMorphFrames at frame ", iStartFrame, ", creating ", morphConfigs.length, "frames");
-	if (!oNode) {
-		print("oNode null, returning");
-		return false;
-	}
-	var timeStep = Scene.getTimeStep();
-	var iNewFrames = (iStartFrame + morphConfigs.length) - (Scene.getAnimRange().end / timeStep);
-	if (iNewFrames > 0)
-		addFramesToAnim(iNewFrames);
+  print(
+    "Entering createMorphFrames at frame ",
+    iStartFrame,
+    ", creating ",
+    morphConfigs.length,
+    "frames"
+  );
+  if (!oNode) {
+    print("oNode null, returning");
+    return false;
+  }
+  var timeStep = Scene.getTimeStep();
+  var iNewFrames =
+    iStartFrame + morphConfigs.length - Scene.getAnimRange().end / timeStep;
+  if (iNewFrames > 0) addFramesToAnim(iNewFrames);
 
-	for (var i = 1; i < morphConfigs.length; i++) {
-		print("executing morph", i, " in configs");
-		var frameConfig = morphConfigs[i];
-		// print("   " + frameConfig);
-		for (var j = 0; j < frameConfig.length; j++) {
-			var config = frameConfig[j];
-			var oProp = oNode.findProperty(config.name);
-			if (!oProp)
-				oProp = oNode.findPropertyByLabel(config.name);
-			if (!oProp) {
-				oProp = getMorphPropFromNode(oNode, config.name)
-			}
-			if (!oProp) {
-				print("property ", config.name, " not found on node", oNode.getLabel());
-				break;
-			}
-			fValue = config.value || 1;
-			var success = createMorphFrame(oProp, iStartFrame + i, fValue);
-
-		}
-	}
+  for (var i = 1; i < morphConfigs.length; i++) {
+    print("executing morph", i, " in configs");
+    var frameConfig = morphConfigs[i];
+    // print("   " + frameConfig);
+    for (var j = 0; j < frameConfig.length; j++) {
+      var config = frameConfig[j];
+      var oProp = oNode.findProperty(config.name);
+      if (!oProp) oProp = oNode.findPropertyByLabel(config.name);
+      if (!oProp) {
+        oProp = getMorphPropFromNode(oNode, config.name);
+      }
+      if (!oProp) {
+        print("property ", config.name, " not found on node", oNode.getLabel());
+        break;
+      }
+      fValue = config.value || 1;
+      var success = createMorphFrame(oProp, iStartFrame + i, fValue);
+    }
+  }
 }
 
-
-function applyFrameDatas(oNodeRoot, frameDatas, successFrameDatas, failedFrameDatas) {
-	verbose("! Applying frameDatas");
-	var successFrameDatas = successFrameDatas || [];
-	var failedFrameDatas = failedFrameDatas || [];
-	if (Scene.getAnimRange().end < frameDatas.length)
-		setTotalFrames(frameDatas.length);
-	for (var i = 0; i < frameDatas.length; i++) {
-		verbose("  applying frame:", i);
-		var frameData = frameDatas[i];
-		if (frameData) {
-			var keyDatas = frameData.keyDatas;
-			if (keyDatas) {
-				for (var j = 0; j < keyDatas.length; j++) {
-					var keyData = keyDatas[j];
-					if (applyKeyData(oNodeRoot, keyData))
-						addFrameData(successFrameDatas, keyData);
-					else
-						addFrameData(failedFrameDatas, keyData);
-				}
-			}
-		}
-	}
+function applyFrameDatas(
+  oNodeRoot,
+  frameDatas,
+  successFrameDatas,
+  failedFrameDatas
+) {
+  verbose("! Applying frameDatas");
+  var successFrameDatas = successFrameDatas || [];
+  var failedFrameDatas = failedFrameDatas || [];
+  if (Scene.getAnimRange().end < frameDatas.length)
+    setTotalFrames(frameDatas.length);
+  for (var i = 0; i < frameDatas.length; i++) {
+    verbose("  applying frame:", i);
+    var frameData = frameDatas[i];
+    if (frameData) {
+      var keyDatas = frameData.keyDatas;
+      if (keyDatas) {
+        for (var j = 0; j < keyDatas.length; j++) {
+          var keyData = keyDatas[j];
+          if (applyKeyData(oNodeRoot, keyData))
+            addFrameData(successFrameDatas, keyData);
+          else addFrameData(failedFrameDatas, keyData);
+        }
+      }
+    }
+  }
 }
 
 function applyKeyData(oNodeRoot, keyData, overrideFrameIdx) {
-	if (!oNodeRoot || !keyData.nodeName || !keyData.propName) {
-		print("ERROR: cannot call applyKeyData; missing paramters. ");
-		return false;
-	}
-	verbose("Creating morph frame on", keyData.nodeName, "prop:", keyData.propName, keyData.propValue);
-	var oNode;
-	if (oNodeRoot.getName() == keyData.nodeName)
-		oNode = oNodeRoot;
-	else
-		oNode = oNodeRoot.findNodeChild(keyData.nodeName, true);
-	if (oNode) {
-		var oProp = oNode.findProperty(keyData.propName);
-		if (!oProp) {
-			oProp = getMorphPropFromNode(oNode, keyData.propName);
-		}
-		if (oProp) {
-			//var iKey = oProp.getNumKeys();
-			//*********** Main action - create the morph frame;
-			// if(createMorphFrameByKey(oProp, keyData.frameIdx, keyData.propValue, iKey)){
-			var frameIdx = overrideFrameIdx == undefined ? keyData.frameIdx : overrideFrameIdx;
+  if (!oNodeRoot || !keyData.nodeName || !keyData.propName) {
+    print("ERROR: cannot call applyKeyData; missing paramters. ");
+    return false;
+  }
+  verbose(
+    "Creating morph frame on",
+    keyData.nodeName,
+    "prop:",
+    keyData.propName,
+    keyData.propValue
+  );
+  var oNode;
+  if (oNodeRoot.getName() == keyData.nodeName) oNode = oNodeRoot;
+  else oNode = oNodeRoot.findNodeChild(keyData.nodeName, true);
+  if (oNode) {
+    var oProp = oNode.findProperty(keyData.propName);
+    if (!oProp) {
+      oProp = getMorphPropFromNode(oNode, keyData.propName);
+    }
+    if (oProp) {
+      //var iKey = oProp.getNumKeys();
+      //*********** Main action - create the morph frame;
+      // if(createMorphFrameByKey(oProp, keyData.frameIdx, keyData.propValue, iKey)){
+      var frameIdx =
+        overrideFrameIdx == undefined ? keyData.frameIdx : overrideFrameIdx;
 
-			if (createMorphFrame(oProp, frameIdx, keyData.propValue)) {
-				verbose("Successfully created morph frame on", keyData.nodeName, "prop:", keyData.propName, keyData.propValue);
-				return true;
-			}
-			else {
-				print("Failed to create morph frame on", keyData.nodeName, "prop:", keyData.propName, keyData.propValue);
-				return false;
-			}
-		}
-		else {
-			print("property ", keyData.propName, " not found on node", oNode.getLabel());
-			return false;
-		}
-	}
-	else {
-		print("could not find node:", keyData.nodeName, "on node:", oNodeRoot.getLabel());
-		return false
-	}
+      if (createMorphFrame(oProp, frameIdx, keyData.propValue)) {
+        verbose(
+          "Successfully created morph frame on",
+          keyData.nodeName,
+          "prop:",
+          keyData.propName,
+          keyData.propValue
+        );
+        return true;
+      } else {
+        print(
+          "Failed to create morph frame on",
+          keyData.nodeName,
+          "prop:",
+          keyData.propName,
+          keyData.propValue
+        );
+        return false;
+      }
+    } else {
+      print(
+        "property ",
+        keyData.propName,
+        " not found on node",
+        oNode.getLabel()
+      );
+      return false;
+    }
+  } else {
+    print(
+      "could not find node:",
+      keyData.nodeName,
+      "on node:",
+      oNodeRoot.getLabel()
+    );
+    return false;
+  }
 }
 
 /** **************************************************************************/
 function createMorphFrameByKey(oProperty, iFrame, fValue, iKey) {
-	if (iKey < 1) {
-		//verbose("")
-		return false;
-	}
-	if (!oProperty) {
-		print("Error: Property is null.");
-		return false;
-	}
-	if (!oProperty.inherits("DzFloatProperty")) {
-		print("Error: Property is not a DzFloatProperty.");
-		return false;
-	}
-	verbose("Property: " + oProperty.getLabel());
-	var timeStep = Scene.getTimeStep();
-	var tTarget = iFrame * timeStep;
-	var tPrev = iFrame * timeStep - timeStep;
-	var tNext = iFrame * timeStep + timeStep;
-	var fPrevValue = oProperty.getKeyValue(iKey - 1);
-	var fNextValue = oProperty.getKeyValue(iKey - 1);
+  if (iKey < 1) {
+    //verbose("")
+    return false;
+  }
+  if (!oProperty) {
+    print("Error: Property is null.");
+    return false;
+  }
+  if (!oProperty.inherits("DzFloatProperty")) {
+    print("Error: Property is not a DzFloatProperty.");
+    return false;
+  }
+  verbose("Property: " + oProperty.getLabel());
+  var timeStep = Scene.getTimeStep();
+  var tTarget = iFrame * timeStep;
+  var tPrev = iFrame * timeStep - timeStep;
+  var tNext = iFrame * timeStep + timeStep;
+  var fPrevValue = oProperty.getKeyValue(iKey - 1);
+  var fNextValue = oProperty.getKeyValue(iKey - 1);
 
-	//Set the target frame to new value		
-	// if (tPrev > 0){
-	oProperty.setValue(tPrev, fPrevValue);
-	verbose("Property ", oProperty.getLabel(), " set at frame ", tPrev / timeStep, "to", fPrevValue);
-	// }
-	// if (iFrame + 1 < Scene.getAnimRange().end){
-	oProperty.setValue(tNext, fNextValue);
-	verbose("Property ", oProperty.getLabel(), " set at frame ", tNext / timeStep, " to ", fNextValue);
-	// }
-	oProperty.setValue(tTarget, fValue);
-	verbose("Set morph frame for", oProperty.getLabel(), "at frame", iFrame, "to value", fValue);
-	return true;
+  //Set the target frame to new value
+  // if (tPrev > 0){
+  oProperty.setValue(tPrev, fPrevValue);
+  verbose(
+    "Property ",
+    oProperty.getLabel(),
+    " set at frame ",
+    tPrev / timeStep,
+    "to",
+    fPrevValue
+  );
+  // }
+  // if (iFrame + 1 < Scene.getAnimRange().end){
+  oProperty.setValue(tNext, fNextValue);
+  verbose(
+    "Property ",
+    oProperty.getLabel(),
+    " set at frame ",
+    tNext / timeStep,
+    " to ",
+    fNextValue
+  );
+  // }
+  oProperty.setValue(tTarget, fValue);
+  verbose(
+    "Set morph frame for",
+    oProperty.getLabel(),
+    "at frame",
+    iFrame,
+    "to value",
+    fValue
+  );
+  return true;
 }
 
 /** **************************************************************************/
 function createMorphFrame(oProperty, iFrame, fValue) {
-	if (!oProperty) {
-		print("Error: Property is null.");
-		return false;
-	}
-	if (!oProperty.inherits("DzFloatProperty")) {
-		print("Error: Property is not a DzFloatProperty.");
-		return false;
-	}
-	verbose("Property: " + oProperty.getLabel());
-	var timeStep = Scene.getTimeStep();
-	var tTarget = iFrame * timeStep;
-	var tPrev = iFrame * timeStep - timeStep;
-	var tNext = iFrame * timeStep + timeStep;
-	var fPrevValue = oProperty.getValue(tPrev);
-	var fNextValue = oProperty.getValue(tNext);
+  if (!oProperty) {
+    print("Error: Property is null.");
+    return false;
+  }
+  if (!oProperty.inherits("DzFloatProperty")) {
+    print("Error: Property is not a DzFloatProperty.");
+    return false;
+  }
+  verbose("Property: " + oProperty.getLabel());
+  var timeStep = Scene.getTimeStep();
+  var tTarget = iFrame * timeStep;
+  var tPrev = iFrame * timeStep - timeStep;
+  var tNext = iFrame * timeStep + timeStep;
+  var fPrevValue = oProperty.getValue(tPrev);
+  var fNextValue = oProperty.getValue(tNext);
 
-	//Set the target frame to new value		
-	// if (tPrev > 0){
-	oProperty.setValue(tPrev, fPrevValue);
-	verbose("Property ", oProperty.getLabel(), " set at frame ", tPrev / timeStep, "to", fPrevValue);
-	// }
-	// if (iFrame + 1 < Scene.getAnimRange().end){
-	oProperty.setValue(tNext, fNextValue);
-	verbose("Property ", oProperty.getLabel(), " set at frame ", tNext / timeStep, " to ", fNextValue);
-	// }
-	oProperty.setValue(tTarget, fValue);
-	verbose("Set morph frame for", oProperty.getLabel(), "at frame", iFrame, "to value", fValue);
-	return true;
+  //Set the target frame to new value
+  // if (tPrev > 0){
+  oProperty.setValue(tPrev, fPrevValue);
+  verbose(
+    "Property ",
+    oProperty.getLabel(),
+    " set at frame ",
+    tPrev / timeStep,
+    "to",
+    fPrevValue
+  );
+  // }
+  // if (iFrame + 1 < Scene.getAnimRange().end){
+  oProperty.setValue(tNext, fNextValue);
+  verbose(
+    "Property ",
+    oProperty.getLabel(),
+    " set at frame ",
+    tNext / timeStep,
+    " to ",
+    fNextValue
+  );
+  // }
+  oProperty.setValue(tTarget, fValue);
+  verbose(
+    "Set morph frame for",
+    oProperty.getLabel(),
+    "at frame",
+    iFrame,
+    "to value",
+    fValue
+  );
+  return true;
 }
 
-
-/* Sets selected property from DzParametersPane to it's max on the 
-** current frame, setting keyframes on the previous and next
-** frames to oProperty's current value
-**
-** - bAdvanceFrame: if true, advances frame after morph successfully sets
-** - bWarnOnFail: if true, displays a message box
-*/
+/* Sets selected property from DzParametersPane to it's max on the
+ ** current frame, setting keyframes on the previous and next
+ ** frames to oProperty's current value
+ **
+ ** - bAdvanceFrame: if true, advances frame after morph successfully sets
+ ** - bWarnOnFail: if true, displays a message box
+ */
 function createMorphFrameFromSelectedProperty(bAdvanceFrame, bWarnOnFail) {
-
-	var oPaneMgr = MainWindow.getPaneMgr();
-	var oPane = oPaneMgr.findPane("DzParametersPane");
-	if (!oPane) {
-		print("Error: DzParametersPane was not found.");
-		return false;
-	}
-	var oEditor = oPane.getNodeEditor();
-	//NOTE: not sure if multiple selections are possible
-	var aProperties = oEditor.getPropertySelections(true);
-	for (var i = 0; i < aProperties.length; i += 1) {
-		var oProperty = aProperties[i];
-		if (createMorphFrame(oProperty, Scene.getTime() / Scene.getTimeStep(), 1)) {
-			print("Morph frames for", oProperty.getLabel, "successfully set.");
-			if (bAdvanceFrame)
-				Scene.stepTime();
-		} else {
-			print("Morph frames for", oProperty.getLabel, "failed to set.");
-			if (bWarnOnFail)
-				MessageBox.critical("Morph frames for " + oProperty.getLabel() + " failed to set.",
-					"Failed to set frames", "&OK");
-		}
-	}
+  var oPaneMgr = MainWindow.getPaneMgr();
+  var oPane = oPaneMgr.findPane("DzParametersPane");
+  if (!oPane) {
+    print("Error: DzParametersPane was not found.");
+    return false;
+  }
+  var oEditor = oPane.getNodeEditor();
+  //NOTE: not sure if multiple selections are possible
+  var aProperties = oEditor.getPropertySelections(true);
+  for (var i = 0; i < aProperties.length; i += 1) {
+    var oProperty = aProperties[i];
+    if (createMorphFrame(oProperty, Scene.getTime() / Scene.getTimeStep(), 1)) {
+      print("Morph frames for", oProperty.getLabel, "successfully set.");
+      if (bAdvanceFrame) Scene.stepTime();
+    } else {
+      print("Morph frames for", oProperty.getLabel, "failed to set.");
+      if (bWarnOnFail)
+        MessageBox.critical(
+          "Morph frames for " + oProperty.getLabel() + " failed to set.",
+          "Failed to set frames",
+          "&OK"
+        );
+    }
+  }
 }
 
 /*********************************************************************/
 // DzNode : returns this nodes root node, or oNode if it is root
 function getNodeRoot(oNode) {
-	if (oNode && oNode.inherits("DzNode")) {
-		parent = oNode;
-		while (parent) {
-			oNode = parent;
-			parent = parent.getNodeParent();
-		}
-	}
-	return oNode;
+  if (oNode && oNode.inherits("DzNode")) {
+    parent = oNode;
+    while (parent) {
+      oNode = parent;
+      parent = parent.getNodeParent();
+    }
+  }
+  return oNode;
 }
 
 function getSceneNameNoExt() {
-	var regexFilename = RegExp("\\w*(?=\\.)");
-	var aMatches = regexFilename.exec(Scene.getFilename());
-	if (aMatches.length > 0)
-		return aMatches[0];
-	return undefined;
+  var regexFilename = RegExp("\\w*(?=\\.)");
+  var aMatches = regexFilename.exec(Scene.getFilename());
+  if (aMatches.length > 0) return aMatches[0];
+  return undefined;
 }
-
 
 /*********************************************************************/
 // String : A function for triggering an action
 function triggerAction(sActionName, oSettings) {
-	var oActionMgr = MainWindow.getActionMgr();
-	if (!oActionMgr) {
-		print("Error: no oActionMgr found");
-		return false;
-	}
+  var oActionMgr = MainWindow.getActionMgr();
+  if (!oActionMgr) {
+    print("Error: no oActionMgr found");
+    return false;
+  }
 
-	var oAction = oActionMgr.findAction(sActionName);
-	if (!oAction) {
-		print("Error: no oAction found");
-		return false;
-	}
+  var oAction = oActionMgr.findAction(sActionName);
+  if (!oAction) {
+    print("Error: no oAction found");
+    return false;
+  }
 
-	if (!oAction.enabled) {
-		print("Error:  oAction disabled");
-		return false;
-	}
+  if (!oAction.enabled) {
+    print("Error:  oAction disabled");
+    return false;
+  }
 
-	if (oSettings) {
-		print("Trigger", sActionName, "with settings.");
-		oAction.triggerWithSettings(oSettings);
-		return true;
-	} else {
-		print("Trigger", sActionName, "without settings.");
-		oAction.trigger();
-		return true;
-	}
-};
-
+  if (oSettings) {
+    print("Trigger", sActionName, "with settings.");
+    oAction.triggerWithSettings(oSettings);
+    return true;
+  } else {
+    print("Trigger", sActionName, "without settings.");
+    oAction.trigger();
+    return true;
+  }
+}
 
 function approx_eq(fValue1, fValue2) {
-	return Math.abs(fValue1 - fValue2) < EPSILON;
+  return Math.abs(fValue1 - fValue2) < EPSILON;
 }

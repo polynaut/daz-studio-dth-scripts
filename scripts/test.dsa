@@ -1,0 +1,2 @@
+var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
+print(dir_self.absolutePath());

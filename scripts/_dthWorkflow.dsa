@@ -1,7 +1,7 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
 include(dir_self.filePath("utils/DthUtils.dsa"));
 include(dir_self.filePath("utils/ModifyJcmRom.dsa"));
-include(dir_self.filePath("utils/addMorphAnimationFrames.dsa"));
+include(dir_self.filePath("utils/MorphAnimationFrames.dsa"));
 
 // Special import for your morph animation config
 include(dir_self.filePath("utils/morphAnimConfigs/laraG81.dsa"));
@@ -9,7 +9,7 @@ include(dir_self.filePath("utils/morphAnimConfigs/laraG81.dsa"));
 var options = {
   //root path for DTH poses
   // You must set this. If using windows, backslashes must be escaped (use two backslashes '\\"
-  // D:\DAZ 3D\My DAZ 3D Library\Scripts
+  sPathDazLibrary: "D:\\DAZ 3D\\My DAZ 3D Library\\",
   sPathDthPoses: "D:\\DAZ 3D\\My DAZ 3D Library\\DazToHue\\Poses\\",
   sPathMyDthPoses: "D:\\DAZ 3D\\My DAZ 3D Library\\MyDazToHue\\Poses\\",
   genesisVersion: 8.1, // 8.1 or 9

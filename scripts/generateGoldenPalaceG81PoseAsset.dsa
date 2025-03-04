@@ -1,5 +1,5 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
-include(dir_self.filePath("utils/addMorphAnimationFrames.dsa"));
+include(dir_self.filePath("utils/MorphAnimationFrames.dsa"));
 
 // https://docs.google.com/spreadsheets/d/1dtyecSuk-GxLPn97I6JsYiqvP6xrRNmuRkOrU8oLsGM/edit?gid=764910584#gid=764910584
 /**
