@@ -1,232 +1,230 @@
 // Array of controls to animate
 // Each entry can be either a single control object or an array of linked control objects
 // Format for each control:
-// { 
-//   type: "morph" | "pose", 
+// {
+//   type: "morph" | "pose",
 //   name: string,
 //   value: number,
 //   reset?: number  // Optional reset value, defaults to 0 if not specified
 // }
 
 function getGENControlConfig() {
-    return [
-        { type: "fence" }, // 319
-        { type: "morph", name: "LabiaMajora_Pinch1 Left", value: 1.1 }, // 320
-        { type: "morph", name: "LabiaMajora_Pinch1 Left", value: -0.5 },// 321
-        { type: "morph", name: "LabiaMajora_Pinch2 Left", value: 1.5 }, // 322
-        { type: "morph", name: "LabiaMajora_Pinch2 Left", value: -0.5 },// 323
-        { type: "morph", name: "LabiaMajora_Push1 Left", value: 1 },   // 324
-        { type: "morph", name: "LabiaMajora_Push1 Left", value: -1 },   // 325
-        { type: "morph", name: "LabiaMajora_Push2 Left", value: 1 },   // 326
-        { type: "morph", name: "LabiaMajora_Push2 Left", value: -1 },   // 327
-        { type: "morph", name: "LabiaMajora_Push3 Left", value: 1 },   // 328
-        { type: "morph", name: "LabiaMajora_Push3 Left", value: -1 },   // 329
+  return [
+    // { type: "fence" }, // 319
+    { type: "morph", name: "LabiaMajora_Pinch1 Left", value: 1.1 }, // 320
+    { type: "morph", name: "LabiaMajora_Pinch1 Left", value: -0.5 }, // 321
+    { type: "morph", name: "LabiaMajora_Pinch2 Left", value: 1.5 }, // 322
+    { type: "morph", name: "LabiaMajora_Pinch2 Left", value: -0.5 }, // 323
+    { type: "morph", name: "LabiaMajora_Push1 Left", value: 1 }, // 324
+    { type: "morph", name: "LabiaMajora_Push1 Left", value: -1 }, // 325
+    { type: "morph", name: "LabiaMajora_Push2 Left", value: 1 }, // 326
+    { type: "morph", name: "LabiaMajora_Push2 Left", value: -1 }, // 327
+    { type: "morph", name: "LabiaMajora_Push3 Left", value: 1 }, // 328
+    { type: "morph", name: "LabiaMajora_Push3 Left", value: -1 }, // 329
 
-        { type: "morph", name: "LabiaMajora_Pinch1Right", value: 1.1 }, // 332
-        { type: "morph", name: "LabiaMajora_Pinch1Right", value: -0.5 },// 333
-        { type: "morph", name: "LabiaMajora_Pinch2 Right", value: 1.5 }, // 334
-        { type: "morph", name: "LabiaMajora_Pinch2 Right", value: -0.5 },// 335
-        { type: "morph", name: "LabiaMajora_Push1 Right", value: 1 },   // 336
-        { type: "morph", name: "LabiaMajora_Push1 Right", value: -1 },   // 337
-        { type: "morph", name: "LabiaMajora_Push2 Right", value: 1 },   // 338
-        { type: "morph", name: "LabiaMajora_Push2 Right", value: -1 },   // 339
-        { type: "morph", name: "LabiaMajora_Push3 Right", value: 1 },   // 340
-        { type: "morph", name: "LabiaMajora_Push3 Right", value: -1 },   // 341
+    { type: "morph", name: "LabiaMajora_Pinch1Right", value: 1.1 }, // 332
+    { type: "morph", name: "LabiaMajora_Pinch1Right", value: -0.5 }, // 333
+    { type: "morph", name: "LabiaMajora_Pinch2 Right", value: 1.5 }, // 334
+    { type: "morph", name: "LabiaMajora_Pinch2 Right", value: -0.5 }, // 335
+    { type: "morph", name: "LabiaMajora_Push1 Right", value: 1 }, // 336
+    { type: "morph", name: "LabiaMajora_Push1 Right", value: -1 }, // 337
+    { type: "morph", name: "LabiaMajora_Push2 Right", value: 1 }, // 338
+    { type: "morph", name: "LabiaMajora_Push2 Right", value: -1 }, // 339
+    { type: "morph", name: "LabiaMajora_Push3 Right", value: 1 }, // 340
+    { type: "morph", name: "LabiaMajora_Push3 Right", value: -1 }, // 341
 
-        { type: "morph", name: "LabiaMinora_Pinch1Left", value: 1 },   // 344
-        { type: "morph", name: "LabiaMinora_Pinch1Left", value: -1 },   // 345
-        { type: "morph", name: "LabiaMinora_Pinch2Left", value: 1 },   // 346
-        { type: "morph", name: "LabiaMinora_Pinch2Left", value: -1 },   // 347
-        { type: "morph", name: "LabiaMinora_MoveLeft01", value: 4 },   // 348
-        { type: "morph", name: "LabiaMinora_MoveLeft01", value: -4 },   // 349
-        { type: "morph", name: "LabiaMinora_MoveLeft02", value: 4 },   // 350
-        { type: "morph", name: "LabiaMinora_MoveLeft02", value: -4 },   // 351
-        { type: "morph", name: "LabiaMinora_MoveLeft03", value: 4 },   // 352
-        { type: "morph", name: "LabiaMinora_MoveLeft03", value: -4 },   // 353
-        { type: "morph", name: "LabiaMinora_MoveLeft04", value: 4 },   // 354
-        { type: "morph", name: "LabiaMinora_MoveLeft04", value: -4 },   // 355
-        { type: "morph", name: "LabiaMinora_MoveLeft05", value: 4 },   // 356
-        { type: "morph", name: "LabiaMinora_MoveLeft05", value: -4 },   // 357
-        { type: "morph", name: "LabiaMinora_MoveLeft06", value: 4 },   // 358
-        { type: "morph", name: "LabiaMinora_MoveLeft06", value: -4 },   // 359
-        { type: "morph", name: "LabiaMinora_MoveLeft07", value: 4 },   // 360
-        { type: "morph", name: "LabiaMinora_MoveLeft07", value: -4 },   // 361
-        { type: "morph", name: "LabiaMinora_MoveLeft08", value: 4 },   // 362
-        { type: "morph", name: "LabiaMinora_MoveLeft08", value: -4 },   // 363
-        { type: "morph", name: "LabiaMinora_MoveLeft09", value: 4 },   // 364
-        { type: "morph", name: "LabiaMinora_MoveLeft09", value: -4 },   // 365
-        { type: "morph", name: "LabiaMinora_MoveLeft10", value: 4 },   // 366
-        { type: "morph", name: "LabiaMinora_MoveLeft10", value: -4 },   // 367
-        { type: "morph", name: "LabiaMinora_MoveLeft11", value: 4 },   // 368
-        { type: "morph", name: "LabiaMinora_MoveLeft11", value: -4 },   // 369
+    { type: "morph", name: "LabiaMinora_Pinch1Left", value: 1 }, // 344
+    { type: "morph", name: "LabiaMinora_Pinch1Left", value: -1 }, // 345
+    { type: "morph", name: "LabiaMinora_Pinch2Left", value: 1 }, // 346
+    { type: "morph", name: "LabiaMinora_Pinch2Left", value: -1 }, // 347
+    { type: "morph", name: "LabiaMinora_MoveLeft01", value: 4 }, // 348
+    { type: "morph", name: "LabiaMinora_MoveLeft01", value: -4 }, // 349
+    { type: "morph", name: "LabiaMinora_MoveLeft02", value: 4 }, // 350
+    { type: "morph", name: "LabiaMinora_MoveLeft02", value: -4 }, // 351
+    { type: "morph", name: "LabiaMinora_MoveLeft03", value: 4 }, // 352
+    { type: "morph", name: "LabiaMinora_MoveLeft03", value: -4 }, // 353
+    { type: "morph", name: "LabiaMinora_MoveLeft04", value: 4 }, // 354
+    { type: "morph", name: "LabiaMinora_MoveLeft04", value: -4 }, // 355
+    { type: "morph", name: "LabiaMinora_MoveLeft05", value: 4 }, // 356
+    { type: "morph", name: "LabiaMinora_MoveLeft05", value: -4 }, // 357
+    { type: "morph", name: "LabiaMinora_MoveLeft06", value: 4 }, // 358
+    { type: "morph", name: "LabiaMinora_MoveLeft06", value: -4 }, // 359
+    { type: "morph", name: "LabiaMinora_MoveLeft07", value: 4 }, // 360
+    { type: "morph", name: "LabiaMinora_MoveLeft07", value: -4 }, // 361
+    { type: "morph", name: "LabiaMinora_MoveLeft08", value: 4 }, // 362
+    { type: "morph", name: "LabiaMinora_MoveLeft08", value: -4 }, // 363
+    { type: "morph", name: "LabiaMinora_MoveLeft09", value: 4 }, // 364
+    { type: "morph", name: "LabiaMinora_MoveLeft09", value: -4 }, // 365
+    { type: "morph", name: "LabiaMinora_MoveLeft10", value: 4 }, // 366
+    { type: "morph", name: "LabiaMinora_MoveLeft10", value: -4 }, // 367
+    { type: "morph", name: "LabiaMinora_MoveLeft11", value: 4 }, // 368
+    { type: "morph", name: "LabiaMinora_MoveLeft11", value: -4 }, // 369
 
-        { type: "morph", name: "LabiaMinora_Pinch1Right", value: 1 },   // 378
-        { type: "morph", name: "LabiaMinora_Pinch1Right", value: -1 },   // 379
-        { type: "morph", name: "LabiaMinora_Pinch2Right", value: 1 },   // 380
-        { type: "morph", name: "LabiaMinora_Pinch2Right", value: -1 },   // 381
-        { type: "morph", name: "LabiaMinora_MoveRight01", value: 4 },   // 382
-        { type: "morph", name: "LabiaMinora_MoveRight01", value: -4 },   // 383
-        { type: "morph", name: "LabiaMinora_MoveRight02", value: 4 },   // 384
-        { type: "morph", name: "LabiaMinora_MoveRight02", value: -4 },   // 385
-        { type: "morph", name: "LabiaMinora_MoveRight03", value: 4 },   // 386
-        { type: "morph", name: "LabiaMinora_MoveRight03", value: -4 },   // 387
-        { type: "morph", name: "LabiaMinora_MoveRight04", value: 4 },   // 388
-        { type: "morph", name: "LabiaMinora_MoveRight04", value: -4 },   // 389
-        { type: "morph", name: "LabiaMinora_MoveRight05", value: 4 },   // 390
-        { type: "morph", name: "LabiaMinora_MoveRight05", value: -4 },   // 391
-        { type: "morph", name: "LabiaMinora_MoveRight06", value: 4 },   // 392
-        { type: "morph", name: "LabiaMinora_MoveRight06", value: -4 },   // 393
-        { type: "morph", name: "LabiaMinora_MoveRight07", value: 4 },   // 394
-        { type: "morph", name: "LabiaMinora_MoveRight07", value: -4 },   // 395
-        { type: "morph", name: "LabiaMinora_MoveRight08", value: 4 },   // 396
-        { type: "morph", name: "LabiaMinora_MoveRight08", value: -4 },   // 397
-        { type: "morph", name: "LabiaMinora_MoveRight09", value: 4 },   // 398
-        { type: "morph", name: "LabiaMinora_MoveRight09", value: -4 },   // 399
-        { type: "morph", name: "LabiaMinora_MoveRight10", value: 4 },   // 400
-        { type: "morph", name: "LabiaMinora_MoveRight10", value: -4 },   // 401
-        { type: "morph", name: "LabiaMinora_MoveRight11", value: 4 },   // 402
-        { type: "morph", name: "LabiaMinora_MoveRight11", value: -4 },   // 403
+    { type: "morph", name: "LabiaMinora_Pinch1Right", value: 1 }, // 378
+    { type: "morph", name: "LabiaMinora_Pinch1Right", value: -1 }, // 379
+    { type: "morph", name: "LabiaMinora_Pinch2Right", value: 1 }, // 380
+    { type: "morph", name: "LabiaMinora_Pinch2Right", value: -1 }, // 381
+    { type: "morph", name: "LabiaMinora_MoveRight01", value: 4 }, // 382
+    { type: "morph", name: "LabiaMinora_MoveRight01", value: -4 }, // 383
+    { type: "morph", name: "LabiaMinora_MoveRight02", value: 4 }, // 384
+    { type: "morph", name: "LabiaMinora_MoveRight02", value: -4 }, // 385
+    { type: "morph", name: "LabiaMinora_MoveRight03", value: 4 }, // 386
+    { type: "morph", name: "LabiaMinora_MoveRight03", value: -4 }, // 387
+    { type: "morph", name: "LabiaMinora_MoveRight04", value: 4 }, // 388
+    { type: "morph", name: "LabiaMinora_MoveRight04", value: -4 }, // 389
+    { type: "morph", name: "LabiaMinora_MoveRight05", value: 4 }, // 390
+    { type: "morph", name: "LabiaMinora_MoveRight05", value: -4 }, // 391
+    { type: "morph", name: "LabiaMinora_MoveRight06", value: 4 }, // 392
+    { type: "morph", name: "LabiaMinora_MoveRight06", value: -4 }, // 393
+    { type: "morph", name: "LabiaMinora_MoveRight07", value: 4 }, // 394
+    { type: "morph", name: "LabiaMinora_MoveRight07", value: -4 }, // 395
+    { type: "morph", name: "LabiaMinora_MoveRight08", value: 4 }, // 396
+    { type: "morph", name: "LabiaMinora_MoveRight08", value: -4 }, // 397
+    { type: "morph", name: "LabiaMinora_MoveRight09", value: 4 }, // 398
+    { type: "morph", name: "LabiaMinora_MoveRight09", value: -4 }, // 399
+    { type: "morph", name: "LabiaMinora_MoveRight10", value: 4 }, // 400
+    { type: "morph", name: "LabiaMinora_MoveRight10", value: -4 }, // 401
+    { type: "morph", name: "LabiaMinora_MoveRight11", value: 4 }, // 402
+    { type: "morph", name: "LabiaMinora_MoveRight11", value: -4 }, // 403
 
-        { type: "fence" },   // 414
-        { type: "morph", name: "Vagina_Open 3", value: 1 },   // 415
-        { type: "morph", name: "Vagina_Open_Front Stretch", value: 1 },   // 416
-        { type: "morph", name: "Vagina_Open_SideStretch", value: 1 },   // 417
-        { type: "fence" },   // 418
-        { type: "morph", name: "Anus_Open3", value: 1 },   // 419
-        { type: "morph", name: "Anus Gape_Out", value: 1 },   // 420
-        { type: "fence" },   // 421
-        { type: "morph", name: "Clitoris Inflate", value: 1 },   // 422
-    ];
+    // { type: "fence" },   // 414
+    { type: "morph", name: "Vagina_Open 3", value: 1 }, // 415
+    { type: "morph", name: "Vagina_Open_Front Stretch", value: 1 }, // 416
+    { type: "morph", name: "Vagina_Open_SideStretch", value: 1 }, // 417
+    // { type: "fence" },   // 418
+    { type: "morph", name: "Anus_Open3", value: 1 }, // 419
+    { type: "morph", name: "Anus Gape_Out", value: 1 }, // 420
+    // { type: "fence" },   // 421
+    { type: "morph", name: "Clitoris Inflate", value: 1 }, // 422
+  ];
 }
 
 function getMISControlConfig() {
-    return [];
+  return [];
 }
 
 function getGensMISControlConfig() {
-    return [
-        { type: "modifier", name: "OpenDeep", value: 1 },
-        { type: "modifier", name: "Biglips", value: 1 }
-    ];
+  return [
+    { type: "modifier", name: "OpenDeep", value: 1 },
+    { type: "modifier", name: "Biglips", value: 1 },
+  ];
 }
 
 function getEXPControlConfig() {
-    return [
-        { type: "morph", name: "DJ Yua HD 8.1 Anger", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Cool", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Eyes Smoulder", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Eyes Worried", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Grin", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Joy", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Pout", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Shock", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Smile", value: 1 },
-        { type: "morph", name: "DJ Yua HD 8.1 Sneaky", value: 1 },
-        { type: "pose", name: "02", value: 1 }, // Lust02
-        { type: "pose", name: "04", value: 1 }, // Lust04
-        { type: "pose", name: "06", value: 1 }, // Lust06
-        { type: "pose", name: "07", value: 1 }, // Lust07
-        { type: "pose", name: "10", value: 1 }, // Lust10
-        { type: "pose", name: "11", value: 1 }, // Lust11
-        { type: "pose", name: "13", value: 1 }, // Lust13
-        { type: "pose", name: "19", value: 1 }, // Lust19
-        { type: "pose", name: "30", value: 1 }, // Lust30
-        { type: "pose", name: "45", value: 1 }, // Lust45
-        { type: "pose", name: "50", value: 1 } // Lust50
-    ];
+  return [
+    { type: "morph", name: "DJ Yua HD 8.1 Anger", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Cool", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Eyes Smoulder", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Eyes Worried", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Grin", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Joy", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Pout", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Shock", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Smile", value: 1 },
+    { type: "morph", name: "DJ Yua HD 8.1 Sneaky", value: 1 },
+    { type: "pose", name: "02", value: 1 }, // Lust02
+    { type: "pose", name: "04", value: 1 }, // Lust04
+    { type: "pose", name: "06", value: 1 }, // Lust06
+    { type: "pose", name: "07", value: 1 }, // Lust07
+    { type: "pose", name: "10", value: 1 }, // Lust10
+    { type: "pose", name: "11", value: 1 }, // Lust11
+    { type: "pose", name: "13", value: 1 }, // Lust13
+    { type: "pose", name: "19", value: 1 }, // Lust19
+    { type: "pose", name: "30", value: 1 }, // Lust30
+    { type: "pose", name: "45", value: 1 }, // Lust45
+    { type: "pose", name: "50", value: 1 }, // Lust50
+  ];
 }
 
 function getFBMControlConfig() {
-    return [
-        { type: "morph", name: "FBMBodyTone", value: 1 },
-        { type: "morph", name: "Torso Muscular", value: 1 },
-        { type: "morph", name: "Arms Muscular", value: 1 },
-        { type: "morph", name: "Thigh Muscular", value: 1 },
-        { type: "morph", name: "5 Belly Shape Muscular", value: 1 },
+  return [
+    { type: "morph", name: "FBMBodyTone", value: 1 },
+    { type: "morph", name: "Torso Muscular", value: 1 },
+    { type: "morph", name: "Arms Muscular", value: 1 },
+    { type: "morph", name: "Thigh Muscular", value: 1 },
+    { type: "morph", name: "5 Belly Shape Muscular", value: 1 },
 
-        { type: "morph", name: "PBMBreastsPerkSide", value: 1 },
-        { type: "morph", name: "PBMBreastsCleavage", value: 1 },
-        { type: "morph", name: "PBMBreastsCleavage", value: -1 },
-        { type: "morph", name: "PBMBreastsHeavy", value: 1 },
-        [
-            { type: "morph", name: "PBMBreastsNaturalL", value: 0, reset: -0.6 },
-            { type: "morph", name: "PBMBreastsNaturalR", value: 0, reset: -0.6 }
-        ],
-        { type: "morph", name: "Breast Preset 10", value: 1 },
-        { type: "morph", name: "PBMBreastsSize", value: 1 },
-        { type: "morph", name: "!Breast Large", value: 1 },
+    { type: "morph", name: "PBMBreastsPerkSide", value: 1 },
+    { type: "morph", name: "PBMBreastsCleavage", value: 1 },
+    { type: "morph", name: "PBMBreastsCleavage", value: -1 },
+    { type: "morph", name: "PBMBreastsHeavy", value: 1 },
+    [
+      { type: "morph", name: "PBMBreastsNaturalL", value: 0, reset: -0.6 },
+      { type: "morph", name: "PBMBreastsNaturalR", value: 0, reset: -0.6 },
+    ],
+    { type: "morph", name: "Breast Preset 10", value: 1 },
+    { type: "morph", name: "PBMBreastsSize", value: 1 },
+    { type: "morph", name: "!Breast Large", value: 1 },
 
-        { type: "morph", name: "PBMAreolaeDiameter", value: 1 },
-        { type: "morph", name: "Areola Size", value: 1 },
-        { type: "morph", name: "PBMNipplesSize", value: 1 },
-        { type: "morph", name: "PBMNipplesLarge", value: 1 },
-        { type: "morph", name: "Nipples Apply", value: 1 },
-        { type: "morph", name: "Nipples Inflate", value: 1 },
-        { type: "morph", name: "Nipples Tip Adjust", value: 1 },
+    { type: "morph", name: "PBMAreolaeDiameter", value: 1 },
+    { type: "morph", name: "Areola Size", value: 1 },
+    { type: "morph", name: "PBMNipplesSize", value: 1 },
+    { type: "morph", name: "PBMNipplesLarge", value: 1 },
+    { type: "morph", name: "Nipples Apply", value: 1 },
+    { type: "morph", name: "Nipples Inflate", value: 1 },
+    { type: "morph", name: "Nipples Tip Adjust", value: 1 },
 
-        { type: "morph", name: "PBMNavel", value: 1 },
-        { type: "morph", name: "PBMNavelSize", value: 1 },
-        { type: "morph", name: "Shape NAVEL FOR PEAR", value: 1 },
-        { type: "morph", name: "Shape NAVEL DEEP FOR PEAR", value: 1 },
+    { type: "morph", name: "PBMNavel", value: 1 },
+    { type: "morph", name: "PBMNavelSize", value: 1 },
+    { type: "morph", name: "Shape NAVEL FOR PEAR", value: 1 },
+    { type: "morph", name: "Shape NAVEL DEEP FOR PEAR", value: 1 },
 
-        { type: "morph", name: "PBMHipSize", value: 1 },
+    { type: "morph", name: "PBMHipSize", value: 1 },
 
-        { type: "morph", name: "Shape THIGHS BIG", value: 1 },
-        { type: "morph", name: "PBMThighsSize", value: 1 },
-        { type: "morph", name: "Thigh Inflate", value: 1 },
-        { type: "morph", name: "Thigh Thickness Depth", value: 1 },
-        { type: "morph", name: "Thigh Thickness Width", value: 1 },
+    { type: "morph", name: "Shape THIGHS BIG", value: 1 },
+    { type: "morph", name: "PBMThighsSize", value: 1 },
+    { type: "morph", name: "Thigh Inflate", value: 1 },
+    { type: "morph", name: "Thigh Thickness Depth", value: 1 },
+    { type: "morph", name: "Thigh Thickness Width", value: 1 },
 
-        { type: "morph", name: "PBMGlutesSize", value: 1 },
-        { type: "morph", name: "PBMGlutesWidth", value: 1 },
-        { type: "morph", name: "Glute Inner Close", value: 1 },
-        { type: "morph", name: "Glute Height Inner", value: 1 },
-        { type: "morph", name: "Glute Width Upper", value: 1 },
-        { type: "morph", name: "Glute Width Lower", value: 1 },
+    { type: "morph", name: "PBMGlutesSize", value: 1 },
+    { type: "morph", name: "PBMGlutesWidth", value: 1 },
+    { type: "morph", name: "Glute Inner Close", value: 1 },
+    { type: "morph", name: "Glute Height Inner", value: 1 },
+    { type: "morph", name: "Glute Width Upper", value: 1 },
+    { type: "morph", name: "Glute Width Lower", value: 1 },
 
-        { type: "morph", name: "Glute Length", value: 1 },
-        { type: "morph", name: "Glute Height Lower", value: 1 },
-        { type: "morph", name: "Glute Angle", value: 1 },
-        { type: "morph", name: "Glute Depth", value: 1 },
-        { type: "morph", name: "Glute UpDown", value: -1 },
+    { type: "morph", name: "Glute Length", value: 1 },
+    { type: "morph", name: "Glute Height Lower", value: 1 },
+    { type: "morph", name: "Glute Angle", value: 1 },
+    { type: "morph", name: "Glute Depth", value: 1 },
+    { type: "morph", name: "Glute UpDown", value: -1 },
 
-        [
-            { type: "morph", name: "LGlute Rotate X", value: 1 },
-            { type: "morph", name: "RGlute Rotate X", value: 1 }
-        ],
-        [
-            { type: "morph", name: "LGlute Rotate Y", value: 1 },
-            { type: "morph", name: "RGlute Rotate Y", value: 1 }
-        ],
-        [
-            { type: "morph", name: "LGlute Rotate Z", value: 1 },
-            { type: "morph", name: "RGlute Rotate Z", value: 1 }
-        ],
-        [
-            { type: "morph", name: "LGlute Shape Height", value: 1 },
-            { type: "morph", name: "RGlute Shape Height", value: 1 }
-        ],
-        [
-            { type: "morph", name: "LGlute Shape Height Lower", value: 1 },
-            { type: "morph", name: "RGlute Shape Height Lower", value: 1 }
-        ],
-        [
-            { type: "morph", name: "LGlute Shape Width", value: 1 },
-            { type: "morph", name: "RGlute Shape Width", value: 1 }
-        ],
+    [
+      { type: "morph", name: "LGlute Rotate X", value: 1 },
+      { type: "morph", name: "RGlute Rotate X", value: 1 },
+    ],
+    [
+      { type: "morph", name: "LGlute Rotate Y", value: 1 },
+      { type: "morph", name: "RGlute Rotate Y", value: 1 },
+    ],
+    [
+      { type: "morph", name: "LGlute Rotate Z", value: 1 },
+      { type: "morph", name: "RGlute Rotate Z", value: 1 },
+    ],
+    [
+      { type: "morph", name: "LGlute Shape Height", value: 1 },
+      { type: "morph", name: "RGlute Shape Height", value: 1 },
+    ],
+    [
+      { type: "morph", name: "LGlute Shape Height Lower", value: 1 },
+      { type: "morph", name: "RGlute Shape Height Lower", value: 1 },
+    ],
+    [
+      { type: "morph", name: "LGlute Shape Width", value: 1 },
+      { type: "morph", name: "RGlute Shape Width", value: 1 },
+    ],
 
-        // Breast gravity morph
-        [
-            { type: "morph", name: "!Center Shift", value: 0.37 },
-            { type: "pose", name: "1 Move UpDown", value: -0.05 },
-            { type: "pose", name: "1 Rotate UpDown", value: -0.20 },
-            { type: "pose", name: "3 Depth Adjust", value: 1 },
-            { type: "morph", name: "BL_Gravity_Pointy", value: 0.60 }
-        ],
-        { type: "pose", name: "!TogetherApart", value: 1 },
-        { type: "morph", name: "BL_Gravity", value: 0.13 },
-        { type: "morph", name: "BL_Gravity_Deflate", value: 0.14 },
-    ];
+    // Breast gravity morph
+    [
+      { type: "morph", name: "!Center Shift", value: 0.37 },
+      { type: "pose", name: "1 Move UpDown", value: -0.05 },
+      { type: "pose", name: "1 Rotate UpDown", value: -0.2 },
+      { type: "pose", name: "3 Depth Adjust", value: 1 },
+      { type: "morph", name: "BL_Gravity_Pointy", value: 0.6 },
+    ],
+    { type: "pose", name: "!TogetherApart", value: 1 },
+    { type: "morph", name: "BL_Gravity", value: 0.13 },
+    { type: "morph", name: "BL_Gravity_Deflate", value: 0.14 },
+  ];
 }
-
-
