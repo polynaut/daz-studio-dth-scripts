@@ -9,6 +9,7 @@ include(dir_self.filePath("morphAnimConfigs/laraG81.dsa"));
 var options = {
   // Path to your daz studio library, always use "/" as the path separator, on mac and windows
   sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
+  sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
   genesisVersion: 8.1, // 8.1 or 9
   // Set true to include use the FAC version of the ROM
   bIncludeFAC: true,
@@ -334,7 +335,7 @@ function getRomPaths(options) {
   var romSubDir = options.genesisVersion === 9 ? "Genesis 9" : "Genesis 8.1";
   var sRomPath =
     options["sPathDazLibrary"] + "DazToHue/Poses/" + romSubDir + "/";
-  var sMyRomPath = options["sPathMyDthPoses"] + romSubDir + "/";
+  var sMyRomPath = options["sPathCustomDthPoseAssets"] + romSubDir + "/";
 
   var RomDK9 = sRomPath + "Common/Dicktator 9/DK9 - Dicktator.duf";
   var RomGP9 = sRomPath + "Common/Golden Palace 9/GP9 - Golden Palace.duf";
