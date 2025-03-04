@@ -16,6 +16,17 @@ function findControl(selectedNode, obj, controlName, type) {
         return mod;
       }
     }
+  } else if (type === "modifier") {
+    // Check modifiers specifically for Modifier/Shape types
+    for (var m = 0; m < obj.getNumModifiers(); m++) {
+      var mod = obj.getModifier(m);
+      if (
+        (mod.getLabel() === controlName || mod.getName() === controlName) &&
+        mod.inherits("DzModifier")
+      ) {
+        return mod;
+      }
+    }
   }
   return null;
 }
@@ -178,13 +189,19 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     print("Number of modifiers found: " + numMods);
 
     // Check both modifiers and parameters for controls
-    print("\nSearching for controls containing 'Together' or 'Apart':");
+    print("\nCollecting all available controls:");
 
-    // Check modifiers (morphs)
+    // Check modifiers (morphs and modifier/shapes)
     for (var m = 0; m < numMods; m++) {
       var mod = obj.getModifier(m);
       var modLabel = mod.getLabel() || "";
-      allFoundControls.push(modLabel);
+      var modName = mod.getName() || "";
+      var type = mod.inherits("DzModifier") ? "modifier" : "morph";
+      allFoundControls.push({
+        type: type,
+        label: modLabel,
+        name: modName,
+      });
     }
 
     // Check parameters (poses)
@@ -193,7 +210,12 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     for (var p = 0; p < numParams; p++) {
       var param = selectedNode.getProperty(p);
       var paramLabel = param.getLabel() || "";
-      allFoundControls.push(paramLabel);
+      var paramName = param.getName() || "";
+      allFoundControls.push({
+        type: "pose",
+        label: paramLabel,
+        name: paramName,
+      });
     }
 
     // Use current frame as start frame
@@ -255,7 +277,13 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
           });
         } else {
           missingControls.push(control.name);
-          print("⚠️ Control not found: " + control.name);
+          print(
+            "⚠️ Control not found: " +
+              control.name +
+              " (type: " +
+              control.type +
+              ")"
+          );
         }
       });
 
@@ -287,9 +315,23 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
       print(
         "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
       );
-      allFoundControls.sort(); // Sort alphabetically
+
+      // Sort the controls for better readability
+      allFoundControls.sort(function (a, b) {
+        return a.label.localeCompare(b.label);
+      });
+
       for (var i = 0; i < allFoundControls.length; i++) {
-        print("  " + allFoundControls[i]);
+        var control = allFoundControls[i];
+        print(
+          "  " +
+            control.type +
+            ": " +
+            control.label +
+            (control.name !== control.label
+              ? " (Name: " + control.name + ")"
+              : "")
+        );
       }
     }
   } else {
