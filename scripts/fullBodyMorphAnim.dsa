@@ -2,12 +2,12 @@ var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
 include(dir_self.filePath("utils/addMorphAnimationFrames.dsa"));
 
 /**
- * Array of morphs to animate. Each entry can be either a
+ * Array of morphs/poses/modifiers to animate. Each entry can be either a
  * single control object or an array of linked control objects
  *
  * Format for each control:
  * {
- *   type: "morph" | "pose",
+ *   type: "morph" | "modifier" | "pose",
  *   name: string,
  *   value: number,
  *   reset?: number  // Optional reset value, defaults to 0 if not specified
@@ -133,4 +133,13 @@ var morphConfigs = [
   { type: "morph", name: "Shape NAVEL DEEP FOR PEAR", value: 1 },
 ];
 
-generateMorphAnimation(morphConfigs);
+var oNodeRoot = Scene.getPrimarySelection();
+if (!oNodeRoot || !oNodeRoot.inherits("DzNode")) {
+  MessageBox.information(
+    "Error: Node `Genesis 8/9` not found in scene",
+    "",
+    ""
+  );
+  return false;
+}
+generateMorphAnimation(oNodeRoot, morphConfigs);

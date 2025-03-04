@@ -339,20 +339,10 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
   }
 }
 
-function generateMorphAnimation(morphConfigs) {
+function generateMorphAnimation(oNodeRoot, morphConfigs) {
   beginUndo();
 
   Scene.setTime(0);
-
-  var oNodeRoot = Scene.getPrimarySelection();
-  if (!oNodeRoot || !oNodeRoot.inherits("DzNode")) {
-    MessageBox.information(
-      "Error: Node `Genesis 8/9` not found in scene",
-      "",
-      ""
-    );
-    return false;
-  }
 
   addMorphAnimationFrames(oNodeRoot, morphConfigs);
 
