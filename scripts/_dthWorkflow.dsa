@@ -3,30 +3,32 @@ include(dir_self.filePath("utils/DthUtils.dsa"));
 include(dir_self.filePath("utils/ModifyJcmRom.dsa"));
 include(dir_self.filePath("utils/MorphAnimationFrames.dsa"));
 
-// Special import for your morph animation config
-include(dir_self.filePath("utils/morphAnimConfigs/laraG81.dsa"));
+// Special import for your morph animation configs
+include(dir_self.filePath("morphAnimConfigs/laraG81.dsa"));
 
 var options = {
-  //root path for DTH poses
-  // You must set this. If using windows, backslashes must be escaped (use two backslashes '\\"
-  sPathDazLibrary: "D:\\DAZ 3D\\My DAZ 3D Library\\",
-  sPathDthPoses: "D:\\DAZ 3D\\My DAZ 3D Library\\DazToHue\\Poses\\",
-  sPathMyDthPoses: "D:\\DAZ 3D\\My DAZ 3D Library\\MyDazToHue\\Poses\\",
+  // Path to your daz studio library, always use "/" as the path separator, on mac and windows
+  sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
   genesisVersion: 8.1, // 8.1 or 9
-  // set true to include use the FAC version of the ROM
+  // Set true to include use the FAC version of the ROM
   bIncludeFAC: true,
   bIncludeDK: false,
   bIncludeGP: true,
-  bDQS: true, // set true to enable Dual Quat Skinning, defaults to linear
-  FACsDetailStrength: 1.0,
-  FlexionStrength: 1.0,
-  // Offsets for the fence poses, relative to the first frame of the GP9 ROM file
+  bDQS: true, // set true to enable Dual Quaternion Skinning, defaults to Linear
+  FACsDetailStrength: 1.0, // only used for G9
+  FlexionStrength: 1.0, // only used for G9
+  // Offsets for the fence poses, relative to the first frame of the GP ROM file
   aGPFenceOffsets: [0, 83, 87, 90],
-  // Offsets for the fence poses, relative to the first frame of the DK9 ROM file
+  // Offsets for the fence poses, relative to the first frame of the DK ROM file
   // Ex. The standard offsets as of DTH 1.6.6:
   aDKFenceOffsets: [0, 33, 46, 47, 49, 52],
-  // Add MIS morphs for default genitalia, function name must be "getGensMISControlConfig"
-  //sGenMISNodeName: "Genesis 8 Female Genitalia"
+  //   oMISConfig: {
+  //     nodeName: "Genesis 8 Female Genitalia",
+  //     morphConfigs: [
+  //       { type: "modifier", name: "OpenDeep", value: 1 },
+  //       { type: "modifier", name: "Biglips", value: 1 },
+  //     ],
+  //   },
 };
 
 function ApplyDTHWorkflow(options) {
@@ -102,10 +104,10 @@ function ApplyDTHWorkflow(options) {
     if (!ApplyDK(options, oNodeRoot, oNodeDk9, startFrame)) return false;
   } else if (options["bIncludeGP"]) {
     print("Applying Golden Palace ROMs...");
-    addMorphAnimationFrames(oNodeGP, getGENControlConfig());
-    /*addFramesToAnim();
-        var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-        ApplyGP(options, oNodeRoot, oNodeGP, startFrame);*/
+    // addMorphAnimationFrames(oNodeGP, getGENControlConfig());
+    addFramesToAnim();
+    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
+    ApplyGP(options, oNodeRoot, oNodeGP, startFrame);
   }
 
   /** PHY      *****************************************************/
@@ -123,14 +125,19 @@ function ApplyDTHWorkflow(options) {
     addMorphAnimationFrames(oNodeRoot, getMISControlConfig());
   }
 
-  if (options["sGenMISNodeName"] && getGensMISControlConfig().length > 0) {
-    print("Applying Genesis MIS morphs to " + options.sGenMISNodeName);
-    var oNodeGens = oNodeRoot.findNodeChildByLabel(options.sGenMISNodeName);
-    if (oNodeGens) {
+  if (
+    options.oMISConfig &&
+    options.oMISConfig.nodeName &&
+    options.oMISConfig.morphConfigs &&
+    options.oMISConfig.morphConfigs.length > 0
+  ) {
+    print("Applying Genesis MIS morphs to " + options.oMISConfig.nodeName);
+    var oNodeMIS = oNodeRoot.findNodeChildByLabel(options.oMISConfig.nodeName);
+    if (oNodeMIS) {
       Scene.selectAllNodes(false);
-      oNodeGens.select(true);
-      addMorphAnimationFrames(oNodeGens, getGensMISControlConfig());
-      oNodeGens.select(false);
+      oNodeMIS.select(true);
+      addMorphAnimationFrames(oNodeMIS, options.oMISConfig.morphConfigs);
+      oNodeMIS.select(false);
       oNodeRoot.select(true);
     }
   }
@@ -325,30 +332,31 @@ function addFenceFrameAtEndOfTimeline() {
 function getRomPaths(options) {
   // Set up paths - should only need to change if using custom ROMs
   var romSubDir = options.genesisVersion === 9 ? "Genesis 9" : "Genesis 8.1";
-  var sRomPath = options["sPathDthPoses"] + romSubDir + "\\";
-  var sMyRomPath = options["sPathMyDthPoses"] + romSubDir + "\\";
+  var sRomPath =
+    options["sPathDazLibrary"] + "DazToHue/Poses/" + romSubDir + "/";
+  var sMyRomPath = options["sPathMyDthPoses"] + romSubDir + "/";
 
-  var RomDK9 = sRomPath + "Common\\Dicktator 9\\DK9 - Dicktator.duf";
-  var RomGP9 = sRomPath + "Common\\Golden Palace 9\\GP9 - Golden Palace.duf";
+  var RomDK9 = sRomPath + "Common/Dicktator 9/DK9 - Dicktator.duf";
+  var RomGP9 = sRomPath + "Common/Golden Palace 9/GP9 - Golden Palace.duf";
 
   var RomGP81 =
-    sMyRomPath + "Common\\Golden Palace 8.1\\GP8.1 - Golden Palace.duf";
+    sMyRomPath + "Common/Golden Palace 8.1/GP8.1 - Golden Palace.duf";
 
   var GENESIS = "G9";
   if (options.genesisVersion === 8.1) {
     GENESIS = "G8.1";
   }
   var LINEAR_JCM =
-    sRomPath + "Linear\\" + GENESIS + " LINEAR JCM FAC - Base.duf";
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
   var LINEAR_JCM_FAC =
-    sRomPath + "Linear\\" + GENESIS + " LINEAR JCM FAC - Base.duf";
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
   var LINEAR_JCM_FAC_MOUTH =
-    sRomPath + "Linear\\" + GENESIS + " LINEAR JCM FAC - Mouth.duf";
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Mouth.duf";
 
-  var DQS_JCM = sRomPath + "DQS\\" + GENESIS + " DQS JCM FAC - Base.duf";
-  var DQS_JCM_FAC = sRomPath + "DQS\\" + GENESIS + " DQS JCM FAC - Base.duf";
+  var DQS_JCM = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
+  var DQS_JCM_FAC = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
   var DQS_JCM_FAC_MOUTH =
-    sRomPath + "DQS\\" + GENESIS + " DQS JCM FAC - Mouth.duf";
+    sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Mouth.duf";
 
   var sJcmROM;
   var sMouthROM;
