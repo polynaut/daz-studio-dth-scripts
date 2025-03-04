@@ -27,11 +27,11 @@ var morphConfigs = [
 
 To know how a morph is actually named internally, you can use the `Parameter Settings` in the UI of Daz Studio:
 
-![parameter-settings-01](https://github.com/user-attachments/assets/bcc5a5d5-bebd-4751-8b29-12c3b67e8622)
+![parameter-settings-01](https://github.com/user-attachments/assets/58a5e27d-3d05-44be-9c60-1ccf36624607)
 
 Just grab the name value there and use that for your script configuration.
 
-![parameter-settings-02](https://github.com/user-attachments/assets/6c28c802-d1b3-4c3f-be97-493e2b2616b1)
+![parameter-settings-02](https://github.com/user-attachments/assets/1695e8ad-4289-4bcd-ad83-b1fd507fae29)
 
 ## Script `addFaceMorphAnim`
 
