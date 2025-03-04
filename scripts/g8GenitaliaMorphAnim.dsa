@@ -9,8 +9,8 @@ print("Time step: " + timeStep.valueOf());
 // Array of controls to animate
 // Each entry can be either a single control object or an array of linked control objects
 // Format for each control:
-// { 
-//   type: "morph" | "pose" | "modifier", 
+// {
+//   type: "morph" | "pose" | "modifier",
 //   name: string,
 //   value: number,
 //   reset?: number  // Optional reset value, defaults to 0 if not specified
@@ -18,7 +18,7 @@ print("Time step: " + timeStep.valueOf());
 
 var controlConfigs = [
   { type: "modifier", name: "OpenDeep", value: 1 },
-  { type: "modifier", name: "Biglips", value: 1 }
+  { type: "modifier", name: "Biglips", value: 1 },
 ];
 
 // Helper function to parse control config entry
@@ -26,53 +26,60 @@ function parseControlConfig(config) {
   if (Array.isArray(config)) {
     return {
       isLinked: true,
-      controls: config.map(function(item) {
+      controls: config.map(function (item) {
         return {
           type: item.type,
           name: item.name,
           value: parseFloat(item.value),
-          resetValue: item.reset !== undefined ? parseFloat(item.reset) : 0
+          resetValue: item.reset !== undefined ? parseFloat(item.reset) : 0,
         };
-      })
+      }),
     };
   } else {
     return {
       isLinked: false,
-      controls: [{
-        type: config.type,
-        name: config.name,
-        value: parseFloat(config.value),
-        resetValue: config.reset !== undefined ? parseFloat(config.reset) : 0
-      }]
+      controls: [
+        {
+          type: config.type,
+          name: config.name,
+          value: parseFloat(config.value),
+          resetValue: config.reset !== undefined ? parseFloat(config.reset) : 0,
+        },
+      ],
     };
   }
 }
 
 // Function to find control (morph, pose, or modifier)
 function findControl(obj, controlName, type) {
-  switch(type) {
+  switch (type) {
     case "pose":
       // Check node parameters for poses
       var numParams = selectedNode.getNumProperties();
       for (var p = 0; p < numParams; p++) {
         var param = selectedNode.getProperty(p);
-        if (param.getName() === controlName || param.getLabel() === controlName) {
+        if (
+          param.getName() === controlName ||
+          param.getLabel() === controlName
+        ) {
           return param;
         }
       }
       break;
-      
+
     case "modifier":
       // Check modifiers specifically for Modifier/Shape types
       for (var m = 0; m < obj.getNumModifiers(); m++) {
         var mod = obj.getModifier(m);
-        if ((mod.getLabel() === controlName || mod.getName() === controlName) && 
-            mod.inherits("DzModifier")) {
+        if (
+          (mod.getLabel() === controlName || mod.getName() === controlName) &&
+          mod.inherits("DzModifier")
+        ) {
           return mod;
         }
       }
       break;
-      
+
     case "morph":
       // Check modifiers for morphs
       for (var m = 0; m < obj.getNumModifiers(); m++) {
@@ -89,18 +96,18 @@ function findControl(obj, controlName, type) {
 // Function to set all controls to their reset values at a specific frame
 function resetAllControlsAtFrame(obj, frame) {
   var processedControls = {}; // Track which controls we've already processed
-  
+
   for (var i = 0; i < controlConfigs.length; i++) {
     var config = parseControlConfig(controlConfigs[i]);
-    
-    config.controls.forEach(function(control) {
+
+    config.controls.forEach(function (control) {
       // Skip if we've already processed this control
       if (processedControls[control.name]) {
         return;
       }
-      
+
       var controlMod = findControl(obj, control.name, control.type);
-      
+
       if (controlMod) {
         if (control.type === "pose") {
           controlMod.setValue(control.resetValue);
@@ -109,7 +116,14 @@ function resetAllControlsAtFrame(obj, frame) {
           channel.setValue(timeStep * frame, control.resetValue);
         }
         processedControls[control.name] = true;
-        print("Reset " + control.type + " " + control.name + " to " + control.resetValue);
+        print(
+          "Reset " +
+            control.type +
+            " " +
+            control.name +
+            " to " +
+            control.resetValue
+        );
       }
     });
   }
@@ -162,7 +176,7 @@ if (selectedNode) {
 
     // Check both modifiers and parameters for controls
     print("\nCollecting all available controls:");
-    
+
     // Check modifiers (morphs and modifier/shapes)
     for (var m = 0; m < numMods; m++) {
       var mod = obj.getModifier(m);
@@ -173,10 +187,10 @@ if (selectedNode) {
       allFoundControls.push({
         type: type,
         label: modLabel,
-        name: modName
+        name: modName,
       });
     }
-    
+
     // Check parameters (poses)
     var numParams = selectedNode.getNumProperties();
     print("\nChecking " + numParams + " parameters for poses...");
@@ -188,7 +202,7 @@ if (selectedNode) {
       allFoundControls.push({
         type: "pose",
         label: paramLabel,
-        name: paramName
+        name: paramName,
       });
     }
 
@@ -216,7 +230,7 @@ if (selectedNode) {
       var controlsToSet = [];
 
       // First, gather all controls
-      config.controls.forEach(function(control) {
+      config.controls.forEach(function (control) {
         var currentControl = findControl(obj, control.name, control.type);
 
         if (currentControl) {
@@ -224,16 +238,22 @@ if (selectedNode) {
             control: currentControl,
             name: control.name,
             value: control.value,
-            type: control.type
+            type: control.type,
           });
         } else {
           missingControls.push(control.name);
-          print("⚠️ Control not found: " + control.name + " (type: " + control.type + ")");
+          print(
+            "⚠️ Control not found: " +
+              control.name +
+              " (type: " +
+              control.type +
+              ")"
+          );
         }
       });
 
       // Then set all values at once for this frame
-      controlsToSet.forEach(function(controlData) {
+      controlsToSet.forEach(function (controlData) {
         if (controlData.type === "pose") {
           controlData.control.setValue(controlData.value);
         } else {
@@ -263,13 +283,20 @@ if (selectedNode) {
       print(
         "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
       );
-      allFoundControls.sort(function(a, b) {
+      allFoundControls.sort(function (a, b) {
         return a.label.localeCompare(b.label);
       });
       for (var i = 0; i < allFoundControls.length; i++) {
         var control = allFoundControls[i];
-        print("  " + control.type + ": " + control.label + 
-              (control.name !== control.label ? " (Name: " + control.name + ")" : ""));
+        print(
+          "  " +
+            control.type +
+            ": " +
+            control.label +
+            (control.name !== control.label
+              ? " (Name: " + control.name + ")"
+              : "")
+        );
       }
     }
   } else {

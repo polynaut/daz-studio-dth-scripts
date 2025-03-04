@@ -16,10 +16,23 @@ At the beginning of the script is a simple array with all morphs you want to app
 
 ```javascript
 var morphConfigs = [
-  "GC BodyMorph:1", // daz works with 0-1, so 1 means 100%
-  "Center Gap Width:-1", // negative values are also valid
-  ["FBMBodyTone:1", "Torso Muscular:1"], // you can link two morphs on the same frame
-  "PBMWaistWidth:1.5", // you can also use values greater than 1, this would be 150%
+  // Single morph
+  { type: "morph", name: "GC BodyMorph", value: 1 },
+
+  // Negative values are also valid
+  { type: "morph", name: "PBMWaistWidth", value: -1 },
+
+  // You can link multiple morphs on the same frame
+  [
+    { type: "morph", name: "PBMBreastsImplantsL", value: 1 },
+    { type: "morph", name: "PBMBreastsImplantsR", value: 1 },
+  ],
+
+  // You can use values greater than 1 (this would be 150%)
+  { type: "morph", name: "PBMBreastsDiameter", value: 1.5 },
+
+  // Optionally specify a reset value (defaults to 0 if not provided)
+  { type: "morph", name: "CTRLBreastsNatural", value: 1, reset: -1 },
 ];
 ```
 

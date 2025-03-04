@@ -1,105 +1,136 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
 include(dir_self.filePath("utils/addMorphAnimationFrames.dsa"));
 
-// Array of morphs to animate
-var morphConfig = [
-  // Linked morph "ThickGlutes"
+/**
+ * Array of morphs to animate. Each entry can be either a
+ * single control object or an array of linked control objects
+ *
+ * Format for each control:
+ * {
+ *   type: "morph" | "pose",
+ *   name: string,
+ *   value: number,
+ *   reset?: number  // Optional reset value, defaults to 0 if not specified
+ * }
+ */
+var morphConfigs = [
   [
-    //"PBMGlutesSize:0.6",
-    "PBMGlutesWidth:0.77",
-    "Glute Inner Close:0.3",
-    "Glute Height Inner:0.52",
-    "Glute Width Upper:0.87",
-    "Glute Width Lower:1",
-    "Glute Length:1",
-    "Glute Height Lower:1",
+    { type: "morph", name: "PBMGlutesWidth", value: 0.77 },
+    { type: "morph", name: "Glute Inner Close", value: 0.3 },
+    { type: "morph", name: "Glute Height Inner", value: 0.52 },
+    { type: "morph", name: "Glute Width Upper", value: 0.87 },
+    { type: "morph", name: "Glute Width Lower", value: 1 },
+    { type: "morph", name: "Glute Length", value: 1 },
+    { type: "morph", name: "Glute Height Lower", value: 1 },
   ],
-  "GC BodyMorph:1",
-  "FBMBodyTone:1",
-  "Torso Muscular:1",
-  "PBMWaistWidth:-1",
-  "CTRLCartoon Rectangle/HourGlass Body Shape:-1",
-  "Shape THIGHS BIG:1",
-  "Adjust THIGH SIZE:1", // new
-  "5 PEAR SHAPE FULL:1",
-  "5 PEAR SHAPE PARTIAL:1",
-  "6 PEAR SHAPE BIGGER:1", // new
-  "PBMAreolaeDiameter:1",
-  "Areola Size:1",
-  "Center Gap Width:1",
-  "CTRLBreastsNatural:1", // new, needs param adjustment to -100
-  "PBMBreastsCleavage:1",
-  "Lara Croft Cleavage:1", // new
-  "PBMBreastsDiameter:1",
-  ["PBMBreastsImplantsL:1", "PBMBreastsImplantsR:1"],
-  "PBMBreastsSize:1",
-  "PBMBreastsPerkSide:1", // new
-  "Breast Preset 01:1",
-  "Breast Preset 04:1", // new
-  "Breast Preset 10:1",
-  "PBMBreastsUpwardSlope:1",
-  "!Breast Under Weight:-1", // new, needs param adjustment to -100
-  "!Breast Large:1",
-  "PBMNipplesSize:1",
-  "PBMNipplesLarge:1", // new
-  "Nipples Apply:1",
-  "Nipples Inflate:1",
-  "Nipples Tip Adjust:1",
-  "PBMGlutesUpperDepth:1",
-  "PBMGlutesLowerDepth:1",
-  "PBMGlutesSize:1",
-  "PBMGlutesWidth:1",
-  "Glute Angle:1",
-  "Glute Depth:1",
-  "Glute Height Lower:1",
-  "Glute Height Inner:1", // new
-  "Glute UpDown:-1", // new
-  "Glute Length:1",
-  "Glute Width Upper:1",
-  "Glute Width Lower:1",
-  "Glute Inner Close:1", // new
-  "Glute Tension:-1", // needs param adjustment to -100
-  "Glute Size 1:1",
-  "Glute Size 2:1",
-  "Booty 06:1",
-  "Booty 11:1", // new
-  "Shape BIG BUTT:1", // new
-  "Shape BIG BUTT BIGGER:1", // new
-  ["LGlute Rotate Y:1", "RGlute Rotate Y:1"],
-  ["LGlute Rotate Z:1", "RGlute Rotate Z:1"],
-  ["LGlute Shape Height:1", "RGlute Shape Height:1"],
-  ["LGlute Shape Height Lower:1", "RGlute Shape Height Lower:1"],
-  ["LGlute Shape Width:1", "RGlute Shape Width:1"],
-  "PBMHipSize:1",
-  "Hip Depth:1", // new
-  "Hip Diameter:1", // new
-  "Hip Rotate 1:1",
-  "Hip Rotate 2:1", // new
-  "Hip Shape 3:1", // new
-  "Hip Shape 3:-1", // new
-  "Hip Shape 4:1", // new
-  "Hip Shape 4:-1", // new
-  "Hip UpDown:1", // new
-  "Hip Height:1", // newNEW
-  "PBMHipBoneSize:1", // new
-  "PBMThighsSize:1",
-  "Thigh Apart:1",
-  "Thigh Back:1",
-  "Thigh Front:1",
-  "Thigh Inflate:1", // new
-  "Thigh Outer:1", // new
-  "Thigh Rotate:1", // new
-  "Thigh Thickness Depth:1",
-  "Thigh Thickness Width:1",
-  "Shape ADJUST INNER THIGH:1",
-  "Adjust LOWER LEG SIZE:-1",
-  "PBMNavel:1",
-  "PBMNavelSize:1",
-  "PBMPregnant:1",
-  "Arms Muscular:1", // new
-  "PBMNeckSize:-1", // new
-  "Shape NAVEL FOR PEAR:1", // new
-  "Shape NAVEL DEEP FOR PEAR:1", // new
+  { type: "morph", name: "GC BodyMorph", value: 1 },
+  { type: "morph", name: "FBMBodyTone", value: 1 },
+  { type: "morph", name: "Torso Muscular", value: 1 },
+  { type: "morph", name: "PBMWaistWidth", value: -1 },
+  {
+    type: "morph",
+    name: "CTRLCartoon Rectangle/HourGlass Body Shape",
+    value: -1,
+  },
+  { type: "morph", name: "Shape THIGHS BIG", value: 1 },
+  { type: "morph", name: "Adjust THIGH SIZE", value: 1 },
+  { type: "morph", name: "5 PEAR SHAPE FULL", value: 1 },
+  { type: "morph", name: "5 PEAR SHAPE PARTIAL", value: 1 },
+  { type: "morph", name: "6 PEAR SHAPE BIGGER", value: 1 },
+  { type: "morph", name: "PBMAreolaeDiameter", value: 1 },
+  { type: "morph", name: "Areola Size", value: 1 },
+  { type: "morph", name: "Center Gap Width", value: 1 },
+  { type: "morph", name: "CTRLBreastsNatural", value: 1, reset: -1 }, // needs param adjustment to -100
+  { type: "morph", name: "PBMBreastsCleavage", value: 1 },
+  { type: "morph", name: "Lara Croft Cleavage", value: 1 },
+  { type: "morph", name: "PBMBreastsDiameter", value: 1 },
+  [
+    { type: "morph", name: "PBMBreastsImplantsL", value: 1 },
+    { type: "morph", name: "PBMBreastsImplantsR", value: 1 },
+  ],
+  { type: "morph", name: "PBMBreastsSize", value: 1 },
+  { type: "morph", name: "PBMBreastsPerkSide", value: 1 },
+  { type: "morph", name: "Breast Preset 01", value: 1 },
+  { type: "morph", name: "Breast Preset 04", value: 1 },
+  { type: "morph", name: "Breast Preset 10", value: 1 },
+  { type: "morph", name: "PBMBreastsUpwardSlope", value: 1 },
+  { type: "morph", name: "!Breast Under Weight", value: -1, reset: 0 }, // needs param adjustment to -100
+  { type: "morph", name: "!Breast Large", value: 1 },
+  { type: "morph", name: "PBMNipplesSize", value: 1 },
+  { type: "morph", name: "PBMNipplesLarge", value: 1 },
+  { type: "morph", name: "Nipples Apply", value: 1 },
+  { type: "morph", name: "Nipples Inflate", value: 1 },
+  { type: "morph", name: "Nipples Tip Adjust", value: 1 },
+  { type: "morph", name: "PBMGlutesUpperDepth", value: 1 },
+  { type: "morph", name: "PBMGlutesLowerDepth", value: 1 },
+  { type: "morph", name: "PBMGlutesSize", value: 1 },
+  { type: "morph", name: "PBMGlutesWidth", value: 1 },
+  { type: "morph", name: "Glute Angle", value: 1 },
+  { type: "morph", name: "Glute Depth", value: 1 },
+  { type: "morph", name: "Glute Height Lower", value: 1 },
+  { type: "morph", name: "Glute Height Inner", value: 1 },
+  { type: "morph", name: "Glute UpDown", value: -1 },
+  { type: "morph", name: "Glute Length", value: 1 },
+  { type: "morph", name: "Glute Width Upper", value: 1 },
+  { type: "morph", name: "Glute Width Lower", value: 1 },
+  { type: "morph", name: "Glute Inner Close", value: 1 },
+  { type: "morph", name: "Glute Tension", value: -1, reset: 0 }, // needs param adjustment to -100
+  { type: "morph", name: "Glute Size 1", value: 1 },
+  { type: "morph", name: "Glute Size 2", value: 1 },
+  { type: "morph", name: "Booty 06", value: 1 },
+  { type: "morph", name: "Booty 11", value: 1 },
+  { type: "morph", name: "Shape BIG BUTT", value: 1 },
+  { type: "morph", name: "Shape BIG BUTT BIGGER", value: 1 },
+  [
+    { type: "morph", name: "LGlute Rotate Y", value: 1 },
+    { type: "morph", name: "RGlute Rotate Y", value: 1 },
+  ],
+  [
+    { type: "morph", name: "LGlute Rotate Z", value: 1 },
+    { type: "morph", name: "RGlute Rotate Z", value: 1 },
+  ],
+  [
+    { type: "morph", name: "LGlute Shape Height", value: 1 },
+    { type: "morph", name: "RGlute Shape Height", value: 1 },
+  ],
+  [
+    { type: "morph", name: "LGlute Shape Height Lower", value: 1 },
+    { type: "morph", name: "RGlute Shape Height Lower", value: 1 },
+  ],
+  [
+    { type: "morph", name: "LGlute Shape Width", value: 1 },
+    { type: "morph", name: "RGlute Shape Width", value: 1 },
+  ],
+  { type: "morph", name: "PBMHipSize", value: 1 },
+  { type: "morph", name: "Hip Depth", value: 1 },
+  { type: "morph", name: "Hip Diameter", value: 1 },
+  { type: "morph", name: "Hip Rotate 1", value: 1 },
+  { type: "morph", name: "Hip Rotate 2", value: 1 },
+  { type: "morph", name: "Hip Shape 3", value: 1 },
+  { type: "morph", name: "Hip Shape 3", value: -1 },
+  { type: "morph", name: "Hip Shape 4", value: 1 },
+  { type: "morph", name: "Hip Shape 4", value: -1 },
+  { type: "morph", name: "Hip UpDown", value: 1 },
+  { type: "morph", name: "Hip Height", value: 1 },
+  { type: "morph", name: "PBMHipBoneSize", value: 1 },
+  { type: "morph", name: "PBMThighsSize", value: 1 },
+  { type: "morph", name: "Thigh Apart", value: 1 },
+  { type: "morph", name: "Thigh Back", value: 1 },
+  { type: "morph", name: "Thigh Front", value: 1 },
+  { type: "morph", name: "Thigh Inflate", value: 1 },
+  { type: "morph", name: "Thigh Outer", value: 1 },
+  { type: "morph", name: "Thigh Rotate", value: 1 },
+  { type: "morph", name: "Thigh Thickness Depth", value: 1 },
+  { type: "morph", name: "Thigh Thickness Width", value: 1 },
+  { type: "morph", name: "Shape ADJUST INNER THIGH", value: 1 },
+  { type: "morph", name: "Adjust LOWER LEG SIZE", value: -1 },
+  { type: "morph", name: "PBMNavel", value: 1 },
+  { type: "morph", name: "PBMNavelSize", value: 1 },
+  { type: "morph", name: "PBMPregnant", value: 1 },
+  { type: "morph", name: "Arms Muscular", value: 1 },
+  { type: "morph", name: "PBMNeckSize", value: -1 },
+  { type: "morph", name: "Shape NAVEL FOR PEAR", value: 1 },
+  { type: "morph", name: "Shape NAVEL DEEP FOR PEAR", value: 1 },
 ];
 
-generateMorphAnimation(morphConfig);
+generateMorphAnimation(morphConfigs);
