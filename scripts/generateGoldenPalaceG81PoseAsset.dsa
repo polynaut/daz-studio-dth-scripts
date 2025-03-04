@@ -100,6 +100,7 @@ var morphConfigs = [
   { type: "morph", name: "Clitoris Inflate", value: 1 }, // 422
 ];
 
+var oNodeRoot = Scene.getPrimarySelection();
 var oNodeGP = oNodeRoot.findNodeChildByLabel("Golden Palace Gens");
 if (!oNodeGP) {
   MessageBox.information(
