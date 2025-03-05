@@ -1,5 +1,0 @@
-var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
-include(dir_self.filePath("applyDefaultRoms.dsa"));
-include(dir_self.filePath("applyDicktator.dsa"));
-include(dir_self.filePath("applyGoldenPalace.dsa"));
-include(dir_self.filePath("getRomPaths.dsa"));

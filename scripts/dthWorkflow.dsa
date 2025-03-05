@@ -109,10 +109,10 @@ function applyDTHWorkflow(options) {
     if (!applyDicktator(options, oNodeRoot, oNodeDk9, startFrame)) return false;
   } else if (options["bIncludeGP"]) {
     print("Applying Golden Palace ROMs...");
-    addMorphAnimationFrames(oNodeGP, getGENControlConfig());
-    // addFramesToAnim();
-    // var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    // applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);
+    // addMorphAnimationFrames(oNodeGP, getGENControlConfig());
+    addFramesToAnim();
+    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
+    applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);
   }
 
   /** PHY      *****************************************************/
