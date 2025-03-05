@@ -3,14 +3,22 @@
 var DTH_VERBOSE = false;
 var EPSILON = 0.0001;
 
+/**
+ * Prints debug information if verbose mode is enabled
+ * Forwards all arguments to the print function
+ */
 function verbose() {
   if (DTH_VERBOSE) {
     print.apply(this, arguments);
   }
 }
 
-/**********************************************************************
- **********               */
+/**
+ * Sets all properties of the given nodes to linear interpolation
+ * @param {DzNode[]} oNodes - Array of nodes to process
+ * @param {number} [startFrame=0] - Starting frame
+ * @param {number} [endFrame=0] - Ending frame
+ */
 function setLinearInterp(oNodes, startFrame, endFrame) {
   // Set default to linear interpolation off the bat, so hopefully it doesn't need to be set later
   Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
@@ -59,9 +67,13 @@ function setLinearInterp(oNodes, startFrame, endFrame) {
   }
 }
 
-/**********************************************************************
- * Loads preset `sFilename` with `oTarget` node selected, at frame `startframe`
- * startFrame = 0 		*/
+/**
+ * Loads a preset file targeting a specific node at a specified frame
+ * @param {string} sFilename - Path to the preset file
+ * @param {DzNode} oTarget - Target node for the preset
+ * @param {number} [startFrame=0] - Frame to apply the preset
+ * @returns {boolean} Success status
+ */
 function loadPreset(sFilename, oTarget, startFrame) {
   startFrame = typeof startFrame !== "undefined" ? startFrame : 0;
   oContentMgr = App.getContentMgr();
@@ -74,16 +86,20 @@ function loadPreset(sFilename, oTarget, startFrame) {
   return oContentMgr.openFile(sFilename);
 }
 
-/**********************************************************************
- *Sets total frames */
+/**
+ * Sets the total number of frames in the timeline
+ * @param {number} iTotalFrames - Total frames to set
+ */
 function setTotalFrames(iTotalFrames) {
   var oTimeRange = new DzTimeRange(0, iTotalFrames * Scene.getTimeStep());
   print("Setting new time range:", oTimeRange.start, "to", oTimeRange.end);
   Scene.setAnimRange(oTimeRange);
 }
 
-/**********************************************************************
- *Adds new frames to end of the anim play range. No arguments adds 1 frame.*/
+/**
+ * Adds new frames to the end of the animation range
+ * @param {number} [iNewFrames=1] - Number of frames to add
+ */
 function addFramesToAnim(iNewFrames) {
   iNewFrames = typeof iNewFrames !== "undefined" ? iNewFrames : 1;
   var oTimeRange = new DzTimeRange(
@@ -93,8 +109,13 @@ function addFramesToAnim(iNewFrames) {
   Scene.setAnimRange(oTimeRange);
 }
 
-/**********************************************************************
- *Memorizes figure for `oNode` at `iSourceFrame`, Restores Figure for each frame in `aTargetFrames`.*/
+/**
+ * Creates fence poses by memorizing a figure's state at a source frame
+ * and restoring it at specified target frames
+ * @param {DzNode} oNode - Node to set fence poses for
+ * @param {number} iSourceFrame - Source frame to memorize
+ * @param {number[]} aTargetFrames - Array of target frames to restore to
+ */
 function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
   var timeStep = Scene.getTimeStep();
   Scene.selectAllNodes(false);
@@ -111,11 +132,14 @@ function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
   }
 }
 
-// function getKeysAtFrame(oNode, )
-
-/**********************************************************************
- *Sets property `sPropName` on `oNode` to `fValue` at time `iFrame`.
- * iFrame = 0  		*/
+/**
+ * Sets a property value by name on a node at a specific frame
+ * @param {DzNode} oNode - Node to set property on
+ * @param {string} sPropName - Property name
+ * @param {number} fValue - Value to set
+ * @param {number} [iFrame=0] - Frame to set the value at
+ * @returns {boolean} Success status
+ */
 function setPropertyByName(oNode, sPropName, fValue, iFrame) {
   iFrame = typeof iFrame !== "undefined" ? iFrame : 0;
   print("Setting property", sPropName, "to", fValue, "at frame", iFrame, "...");
@@ -146,7 +170,14 @@ function setPropertyByName(oNode, sPropName, fValue, iFrame) {
   }
 }
 
-/** deprecated - use loadPreset ***********************/
+/**
+ * Loads a DUF file to a node (deprecated - use loadPreset instead)
+ * @param {DzNode} oNodeRoot - Root node
+ * @param {string} sDufPath - Path to DUF file
+ * @param {string} sChildLabel - Label of the child node to find/add
+ * @returns {boolean} Success status
+ * @deprecated Use loadPreset instead
+ */
 function loadDufToNode(oNodeRoot, sDufPath, sChildLabel) {
   var oChildNode;
   if (sChildLabel) oChildNode = oNodeRoot.findNodeChildByLabel(sChildLabel);
@@ -182,6 +213,12 @@ function loadDufToNode(oNodeRoot, sDufPath, sChildLabel) {
   }
 }
 
+/**
+ * Finds a morph property from a node by name
+ * @param {DzNode} oNode - Node to search
+ * @param {string} sMorphName - Name of the morph
+ * @returns {DzProperty|undefined} The found property or undefined
+ */
 function getMorphPropFromNode(oNode, sMorphName) {
   var oObj = oNode.getObject();
   if (oObj) {
@@ -193,6 +230,12 @@ function getMorphPropFromNode(oNode, sMorphName) {
   }
 }
 
+/**
+ * Adds keyframe data to the frameDatas array
+ * @param {Array} frameDatas - Array of frame data
+ * @param {Object} keyData - Key data to add
+ * @returns {boolean} Success status
+ */
 function addFrameData(frameDatas, keyData) {
   var idx = keyData.frameIdx;
   if (idx == undefined || idx == null) return false;
@@ -202,6 +245,14 @@ function addFrameData(frameDatas, keyData) {
   return true;
 }
 
+/**
+ * Reads property values from a CSV file
+ * @param {string} sFilename - Path to CSV file
+ * @param {Array} [frameDatas] - Existing frame data to append to
+ * @param {number} [iOffset=0] - Frame offset to apply
+ * @returns {Array} Updated frame data
+ * @unused
+ */
 function readPropsCSV(sFilename, frameDatas, iOffset) {
   frameDatas = frameDatas || [];
   iOffset = iOffset || 0;
@@ -245,6 +296,13 @@ function readPropsCSV(sFilename, frameDatas, iOffset) {
   return frameDatas;
 }
 
+/**
+ * Prints frame data to CSV format
+ * @param {Array} frameDatas - Array of frame data
+ * @param {string} [sOutFilename] - Output file path (optional)
+ * @returns {boolean} Success status
+ * @unused
+ */
 function printCSV(frameDatas, sOutFilename) {
   lines = [];
   if (!frameDatas) {
@@ -290,7 +348,14 @@ function printCSV(frameDatas, sOutFilename) {
   }
 }
 
-/** **************************************************************************/
+/**
+ * Creates morph frames for a node based on configuration
+ * @param {DzNode} oNode - Target node
+ * @param {Array} morphConfigs - Morph configurations
+ * @param {number} iStartFrame - Starting frame
+ * @returns {boolean} Success status
+ * @unused
+ */
 function createMorphFrames(oNode, morphConfigs, iStartFrame) {
   print(
     "Entering createMorphFrames at frame ",
@@ -329,6 +394,14 @@ function createMorphFrames(oNode, morphConfigs, iStartFrame) {
   }
 }
 
+/**
+ * Applies frame data to a node
+ * @param {DzNode} oNodeRoot - Root node
+ * @param {Array} frameDatas - Frame data to apply
+ * @param {Array} [successFrameDatas] - Array to store successful frames
+ * @param {Array} [failedFrameDatas] - Array to store failed frames
+ * @unused
+ */
 function applyFrameDatas(
   oNodeRoot,
   frameDatas,
@@ -357,6 +430,14 @@ function applyFrameDatas(
   }
 }
 
+/**
+ * Applies key data to a node
+ * @param {DzNode} oNodeRoot - Root node
+ * @param {Object} keyData - Key data to apply
+ * @param {number} [overrideFrameIdx] - Optional frame index override
+ * @returns {boolean} Success status
+ * @unused
+ */
 function applyKeyData(oNodeRoot, keyData, overrideFrameIdx) {
   if (!oNodeRoot || !keyData.nodeName || !keyData.propName) {
     print("ERROR: cannot call applyKeyData; missing paramters. ");
@@ -423,7 +504,15 @@ function applyKeyData(oNodeRoot, keyData, overrideFrameIdx) {
   }
 }
 
-/** **************************************************************************/
+/**
+ * Creates a morph frame by key index (alternative implementation)
+ * @param {DzProperty} oProperty - Target property
+ * @param {number} iFrame - Frame number
+ * @param {number} fValue - Value to set
+ * @param {number} iKey - Key index
+ * @returns {boolean} Success status
+ * @unused
+ */
 function createMorphFrameByKey(oProperty, iFrame, fValue, iKey) {
   if (iKey < 1) {
     //verbose("")
@@ -480,7 +569,13 @@ function createMorphFrameByKey(oProperty, iFrame, fValue, iKey) {
   return true;
 }
 
-/** **************************************************************************/
+/**
+ * Creates a morph frame for a property
+ * @param {DzProperty} oProperty - Target property
+ * @param {number} iFrame - Frame number
+ * @param {number} fValue - Value to set
+ * @returns {boolean} Success status
+ */
 function createMorphFrame(oProperty, iFrame, fValue) {
   if (!oProperty) {
     print("Error: Property is null.");
@@ -533,12 +628,11 @@ function createMorphFrame(oProperty, iFrame, fValue) {
   return true;
 }
 
-/* Sets selected property from DzParametersPane to it's max on the
- ** current frame, setting keyframes on the previous and next
- ** frames to oProperty's current value
- **
- ** - bAdvanceFrame: if true, advances frame after morph successfully sets
- ** - bWarnOnFail: if true, displays a message box
+/**
+ * Creates morph frames for the currently selected property
+ * @param {boolean} [bAdvanceFrame=false] - Whether to advance to the next frame after setting
+ * @param {boolean} [bWarnOnFail=false] - Whether to show warnings on failure
+ * @unused
  */
 function createMorphFrameFromSelectedProperty(bAdvanceFrame, bWarnOnFail) {
   var oPaneMgr = MainWindow.getPaneMgr();
@@ -567,8 +661,11 @@ function createMorphFrameFromSelectedProperty(bAdvanceFrame, bWarnOnFail) {
   }
 }
 
-/*********************************************************************/
-// DzNode : returns this nodes root node, or oNode if it is root
+/**
+ * Gets the root node of a node
+ * @param {DzNode} oNode - Node to find root for
+ * @returns {DzNode} Root node
+ */
 function getNodeRoot(oNode) {
   if (oNode && oNode.inherits("DzNode")) {
     parent = oNode;
@@ -580,6 +677,11 @@ function getNodeRoot(oNode) {
   return oNode;
 }
 
+/**
+ * Gets the scene filename without extension
+ * @returns {string|undefined} Scene filename without extension
+ * @unused
+ */
 function getSceneNameNoExt() {
   var regexFilename = RegExp("\\w*(?=\\.)");
   var aMatches = regexFilename.exec(Scene.getFilename());
@@ -587,8 +689,12 @@ function getSceneNameNoExt() {
   return undefined;
 }
 
-/*********************************************************************/
-// String : A function for triggering an action
+/**
+ * Triggers a DAZ Studio action by name
+ * @param {string} sActionName - Name of the action to trigger
+ * @param {Object} [oSettings] - Optional settings for the action
+ * @returns {boolean} Success status
+ */
 function triggerAction(sActionName, oSettings) {
   var oActionMgr = MainWindow.getActionMgr();
   if (!oActionMgr) {
@@ -618,6 +724,87 @@ function triggerAction(sActionName, oSettings) {
   }
 }
 
+/**
+ * Checks if two floating point values are approximately equal
+ * @param {number} fValue1 - First value
+ * @param {number} fValue2 - Second value
+ * @returns {boolean} True if values are approximately equal
+ * @unused
+ */
 function approx_eq(fValue1, fValue2) {
   return Math.abs(fValue1 - fValue2) < EPSILON;
+}
+
+/**
+ * Applies initial values to the given node based on the provided options.
+ *
+ * @param {Object} options - Configuration options for applying initial values.
+ * @param {DzNode} oNodeRoot - The root node to apply the initial values to.
+ */
+function applyInitialValues(options, oNodeRoot) {
+  //var oContentMgr = App.getContentMgr();
+  // Set default to linear interpolation off the bat, so hopefully it doesn't need to be set later
+  Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
+  if (options.genesisVersion === 9) {
+    if (options["FACsDetailStrength"] > 0) {
+      setPropertyByName(
+        oNodeRoot,
+        "facs_ctrl_FACSDetailStrength",
+        options["FACsDetailStrength"],
+        0
+      );
+    }
+    if (options["FlexionStrength"] > 0) {
+      setPropertyByName(
+        oNodeRoot,
+        "body_ctrl_FlexionAutoStrength",
+        options["FACsDetailStrength"],
+        0
+      );
+    }
+  }
+}
+
+/**
+ * Adds a fence frame at the end of the timeline.
+ *
+ * This function selects the primary figure in the scene, calculates the last frame of the current animation range,
+ * adds one frame to the timeline, and sets a fence pose at the new last frame.
+ * If no figure is selected, it shows an information message.
+ */
+function addFenceFrameAtEndOfTimeline() {
+  // Get the selected figure
+  var oNode = Scene.getPrimarySelection();
+  if (!oNode) {
+    MessageBox.information(
+      "Please select a figure in the Scene",
+      "No Selection",
+      "&OK"
+    );
+  } else {
+    // Get the current animation range
+    var animRange = Scene.getAnimRange();
+
+    // Get the time step (duration of one frame)
+    var timeStep = Scene.getTimeStep();
+
+    // Calculate the last frame number
+    var lastFrame = Math.floor(animRange.end / timeStep);
+
+    // Set the current frame to the last frame
+    Scene.setFrame(lastFrame);
+
+    // Add 1 frame to the timeline
+    addFramesToAnim(1);
+
+    // Get the current frame
+    var currentFrame = Scene.getFrame();
+
+    // Memorize and restore pose using fence poses functionality
+    // This is equivalent to Edit -> Zero -> Zero Figure Pose -> Restore Pose
+    setFencePoses(oNode, currentFrame, [currentFrame + 1]);
+
+    // Optionally move to the new frame
+    Scene.setFrame(currentFrame + 1);
+  }
 }

@@ -1,0 +1,46 @@
+function applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame) {
+  print(
+    "Setting fence pose for",
+    oNodeRoot.objectName,
+    "from frame",
+    0,
+    "to",
+    startFrame
+  );
+  setFencePoses(oNodeRoot, 0, [startFrame]);
+
+  if (options.genesisVersion === 8.1) {
+    var ROMs = getRomPaths(options);
+    var ROM_GP81 = ROMs.RomGP81;
+    print("Loading ROM: ", ROM_GP81, "at frame", startFrame);
+    if (!loadPreset(ROM_GP81, oNodeGP, startFrame)) {
+      print("Failed loading ROM:", ROM_GP81);
+      return false;
+    }
+  } else if (options.genesisVersion === 9) {
+    var ROMs = getRomPaths(options);
+    var ROM_GP9 = ROMs.RomGP9;
+    print("Loading ROM: ", ROM_GP9, "at frame", startFrame);
+    if (!loadPreset(ROM_GP9, oNodeGP, startFrame)) {
+      print("Failed loading ROM:", ROM_GP9);
+      return false;
+    }
+  }
+
+  var aFenceFrames = options["aGPFenceOffsets"].map(function (x) {
+    return x + startFrame;
+  });
+  print(
+    "Setting fence poses for",
+    oNodeGP.objectName,
+    "from frame",
+    0,
+    "to",
+    aFenceFrames
+  );
+  //setFencePoses(oNodeGP, 0, [617, 650, 663, 664, 666, 669]);
+  setFencePoses(oNodeGP, 0, aFenceFrames);
+
+  print("Setting keys to linear interpolation");
+  setLinearInterp(oNodeGP);
+}

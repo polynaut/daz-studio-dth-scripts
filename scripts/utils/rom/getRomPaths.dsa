@@ -1,0 +1,55 @@
+function getRomPaths(options) {
+  // Set up paths - should only need to change if using custom ROMs
+  var romSubDir = options.genesisVersion === 9 ? "Genesis 9" : "Genesis 8.1";
+  var sRomPath =
+    options["sPathDazLibrary"] + "DazToHue/Poses/" + romSubDir + "/";
+  var sMyRomPath = options["sPathCustomDthPoseAssets"] + romSubDir + "/";
+
+  var RomDK9 = sRomPath + "Common/Dicktator 9/DK9 - Dicktator.duf";
+  var RomGP9 = sRomPath + "Common/Golden Palace 9/GP9 - Golden Palace.duf";
+
+  var RomGP81 =
+    sMyRomPath + "Common/Golden Palace 8.1/GP8.1 - Golden Palace.duf";
+
+  var GENESIS = "G9";
+  if (options.genesisVersion === 8.1) {
+    GENESIS = "G8.1";
+  }
+  var LINEAR_JCM =
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
+  var LINEAR_JCM_FAC =
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
+  var LINEAR_JCM_FAC_MOUTH =
+    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Mouth.duf";
+
+  var DQS_JCM = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
+  var DQS_JCM_FAC = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
+  var DQS_JCM_FAC_MOUTH =
+    sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Mouth.duf";
+
+  var sJcmROM;
+  var sMouthROM;
+
+  if (!options["bDQS"]) {
+    if (options["bIncludeFAC"]) {
+      sJcmROM = LINEAR_JCM_FAC;
+      sMouthROM = LINEAR_JCM_FAC_MOUTH;
+    } else {
+      sJcmROM = LINEAR_JCM;
+    }
+  } else {
+    if (options["bIncludeFAC"]) {
+      sJcmROM = DQS_JCM_FAC;
+      sMouthROM = DQS_JCM_FAC_MOUTH;
+    } else {
+      sJcmROM = DQS_JCM;
+    }
+  }
+  return {
+    sJcmROM: sJcmROM,
+    sMouthROM: sMouthROM,
+    RomDK9: RomDK9,
+    RomGP9: RomGP9,
+    RomGP81: RomGP81,
+  };
+}

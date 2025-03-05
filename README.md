@@ -8,6 +8,8 @@ A collection of scripts for Daz Studio and DTH
 
 ## DTH Workflow
 
+The script `dthWorkflow.dsa` is the main entry point.
+
 ## Script `fullBodyMorphAnim`
 
 This script can add keyframes to your timeline with a specific set of morphs that can be applied for DTH `Full Body Morphs (FBM)` category. It will automatically zero out all morphs on all involved frames and thus will always create an extra frame at the end where everything is zeroed out again.

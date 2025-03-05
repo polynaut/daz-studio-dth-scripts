@@ -1,0 +1,26 @@
+function applyDefaultROMs(options, oNodeRoot, oNodeMouth) {
+  var ROMs = getRomPaths(options);
+  var sJcmROM = ROMs.sJcmROM;
+  var sMouthROM = ROMs.sMouthROM;
+
+  print("Loading JCM ROM: ", sJcmROM);
+  if (loadPreset(sJcmROM, oNodeRoot)) {
+    print("Successfully loaded pose preset.");
+
+    if (options["bIncludeFAC"] && options.genesisVersion === 9) {
+      print("Loading Mouth ROM: ", sMouthROM);
+      if (loadPreset(sMouthROM, oNodeMouth)) {
+        print("Successfully loaded pose preset.");
+        return true;
+      } else {
+        print("Failed loading ROM:", sMouthROM);
+      }
+    } else if (options.genesisVersion === 8.1) {
+      return true;
+    }
+  } else {
+    print("Failed loading ROM:", sJcmROM);
+    print("This is a necessary step. Aborting script.");
+  }
+  return false;
+}

@@ -1,0 +1,42 @@
+function applyDicktator(options, oNodeRoot, oNodeDk9, startFrame) {
+  // TODO: add support for DK8.1
+  if (options.genesisVersion === 8.1) {
+    print("DK8.1 not supported yet");
+    return false;
+  }
+
+  print(
+    "Setting fence pose for",
+    oNodeRoot.objectName,
+    "from frame",
+    0,
+    "to",
+    startFrame
+  );
+  setFencePoses(oNodeRoot, 0, [startFrame]);
+
+  var ROMs = getRomPaths(options);
+  var ROM_DK9 = ROMs.RomDK9;
+  print("Loading ROM: ", ROM_DK9, "at frame", startFrame);
+  if (!loadPreset(ROM_DK9, oNodeDk9, startFrame)) {
+    print("Failed loading ROM:", ROM_DK9);
+    return false;
+  }
+
+  var aFenceFrames = options["aDKFenceOffsets"].map(function (x) {
+    return x + startFrame;
+  });
+  print(
+    "Setting fence poses for",
+    oNodeDk9.objectName,
+    "from frame",
+    0,
+    "to",
+    aFenceFrames
+  );
+  //setFencePoses(oNodeDk9, 0, [617, 650, 663, 664, 666, 669]);
+  setFencePoses(oNodeDk9, 0, aFenceFrames);
+
+  print("Setting keys to linear interpolation");
+  setLinearInterp(oNodeDk9);
+}

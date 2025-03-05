@@ -1,10 +1,11 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
-include(dir_self.filePath("utils/DthUtils.dsa"));
-include(dir_self.filePath("utils/ModifyJcmRom.dsa"));
-include(dir_self.filePath("utils/MorphAnimationFrames.dsa"));
+include(dir_self.filePath("utils/rom/index.dsa"));
+include(dir_self.filePath("utils/dthUtils.dsa"));
+include(dir_self.filePath("utils/modifyJcmRom.dsa"));
+include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
 
 // Special import for your morph animation configs
-include(dir_self.filePath("morphAnimConfigs/laraG81.dsa"));
+include(dir_self.filePath("morphAnimationConfigs/laraG81.dsa"));
 
 var options = {
   // Path to your daz studio library, always use "/" as the path separator, on mac and windows
@@ -32,7 +33,7 @@ var options = {
   //   },
 };
 
-function ApplyDTHWorkflow(options) {
+function applyDTHWorkflow(options) {
   beginUndo();
 
   Scene.setTime(0);
@@ -82,11 +83,11 @@ function ApplyDTHWorkflow(options) {
 
   /**       *****************************************************/
   print("Applying initial values... ");
-  ApplyInitialValues(options, oNodeRoot);
+  applyInitialValues(options, oNodeRoot);
 
   /** JCM + FAC *****************************************************/
   print("Applying default ROMs...");
-  if (!ApplyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
+  if (!applyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
 
   modifyJcmRom();
   addFenceFrameAtEndOfTimeline();
@@ -102,13 +103,13 @@ function ApplyDTHWorkflow(options) {
     print("Applying Dicktator ROMs...");
     addFramesToAnim();
     var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    if (!ApplyDK(options, oNodeRoot, oNodeDk9, startFrame)) return false;
+    if (!applyDicktator(options, oNodeRoot, oNodeDk9, startFrame)) return false;
   } else if (options["bIncludeGP"]) {
     print("Applying Golden Palace ROMs...");
     addMorphAnimationFrames(oNodeGP, getGENControlConfig());
     // addFramesToAnim();
     // var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    // ApplyGP(options, oNodeRoot, oNodeGP, startFrame);
+    // applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);
   }
 
   /** PHY      *****************************************************/
@@ -152,238 +153,4 @@ function ApplyDTHWorkflow(options) {
   MessageBox.information("DTH Workflow successfully applied!", "", "");
 }
 
-function ApplyInitialValues(options, oNodeRoot) {
-  //var oContentMgr = App.getContentMgr();
-  // Set default to linear interpolation off the bat, so hopefully it doesn't need to be set later
-  Scene.setDefaultKeyInterpolationType(DzProperty.Linear);
-  if (options.genesisVersion === 9) {
-    if (options["FACsDetailStrength"] > 0) {
-      setPropertyByName(
-        oNodeRoot,
-        "facs_ctrl_FACSDetailStrength",
-        options["FACsDetailStrength"],
-        0
-      );
-    }
-    if (options["FlexionStrength"] > 0) {
-      setPropertyByName(
-        oNodeRoot,
-        "body_ctrl_FlexionAutoStrength",
-        options["FACsDetailStrength"],
-        0
-      );
-    }
-  }
-}
-
-function ApplyDefaultROMs(options, oNodeRoot, oNodeMouth) {
-  var ROMs = getRomPaths(options);
-  var sJcmROM = ROMs.sJcmROM;
-  var sMouthROM = ROMs.sMouthROM;
-
-  print("Loading JCM ROM: ", sJcmROM);
-  if (loadPreset(sJcmROM, oNodeRoot)) {
-    print("Successfully loaded pose preset.");
-
-    if (options["bIncludeFAC"] && options.genesisVersion === 9) {
-      print("Loading Mouth ROM: ", sMouthROM);
-      if (loadPreset(sMouthROM, oNodeMouth)) {
-        print("Successfully loaded pose preset.");
-        return true;
-      } else {
-        print("Failed loading ROM:", sMouthROM);
-      }
-    } else if (options.genesisVersion === 8.1) {
-      return true;
-    }
-  } else {
-    print("Failed loading ROM:", sJcmROM);
-    print("This is a necessary step. Aborting script.");
-  }
-  return false;
-}
-
-function ApplyGP(options, oNodeRoot, oNodeGP, startFrame) {
-  print(
-    "Setting fence pose for",
-    oNodeRoot.objectName,
-    "from frame",
-    0,
-    "to",
-    startFrame
-  );
-  setFencePoses(oNodeRoot, 0, [startFrame]);
-
-  if (options.genesisVersion === 8.1) {
-    var ROMs = getRomPaths(options);
-    var ROM_GP81 = ROMs.RomGP81;
-    print("Loading ROM: ", ROM_GP81, "at frame", startFrame);
-    if (!loadPreset(ROM_GP81, oNodeGP, startFrame)) {
-      print("Failed loading ROM:", ROM_GP81);
-      return false;
-    }
-  } else if (options.genesisVersion === 9) {
-    var ROMs = getRomPaths(options);
-    var ROM_GP9 = ROMs.RomGP9;
-    print("Loading ROM: ", ROM_GP9, "at frame", startFrame);
-    if (!loadPreset(ROM_GP9, oNodeGP, startFrame)) {
-      print("Failed loading ROM:", ROM_GP9);
-      return false;
-    }
-  }
-
-  var aFenceFrames = options["aGPFenceOffsets"].map(function (x) {
-    return x + startFrame;
-  });
-  print(
-    "Setting fence poses for",
-    oNodeGP.objectName,
-    "from frame",
-    0,
-    "to",
-    aFenceFrames
-  );
-  //setFencePoses(oNodeGP, 0, [617, 650, 663, 664, 666, 669]);
-  setFencePoses(oNodeGP, 0, aFenceFrames);
-
-  print("Setting keys to linear interpolation");
-  setLinearInterp(oNodeGP);
-}
-
-function ApplyDK(options, oNodeRoot, oNodeDk9, startFrame) {
-  // TODO: add support for DK8.1
-  if (options.genesisVersion === 8.1) {
-    print("DK8.1 not supported yet");
-    return false;
-  }
-
-  print(
-    "Setting fence pose for",
-    oNodeRoot.objectName,
-    "from frame",
-    0,
-    "to",
-    startFrame
-  );
-  setFencePoses(oNodeRoot, 0, [startFrame]);
-
-  var ROMs = getRomPaths(options);
-  var ROM_DK9 = ROMs.RomDK9;
-  print("Loading ROM: ", ROM_DK9, "at frame", startFrame);
-  if (!loadPreset(ROM_DK9, oNodeDk9, startFrame)) {
-    print("Failed loading ROM:", ROM_DK9);
-    return false;
-  }
-
-  var aFenceFrames = options["aDKFenceOffsets"].map(function (x) {
-    return x + startFrame;
-  });
-  print(
-    "Setting fence poses for",
-    oNodeDk9.objectName,
-    "from frame",
-    0,
-    "to",
-    aFenceFrames
-  );
-  //setFencePoses(oNodeDk9, 0, [617, 650, 663, 664, 666, 669]);
-  setFencePoses(oNodeDk9, 0, aFenceFrames);
-
-  print("Setting keys to linear interpolation");
-  setLinearInterp(oNodeDk9);
-}
-
-function addFenceFrameAtEndOfTimeline() {
-  // Get the selected figure
-  var oNode = Scene.getPrimarySelection();
-  if (!oNode) {
-    MessageBox.information(
-      "Please select a figure in the Scene",
-      "No Selection",
-      "&OK"
-    );
-  } else {
-    // Get the current animation range
-    var animRange = Scene.getAnimRange();
-
-    // Get the time step (duration of one frame)
-    var timeStep = Scene.getTimeStep();
-
-    // Calculate the last frame number
-    var lastFrame = Math.floor(animRange.end / timeStep);
-
-    // Set the current frame to the last frame
-    Scene.setFrame(lastFrame);
-
-    // Add 1 frame to the timeline
-    addFramesToAnim(1);
-
-    // Get the current frame
-    var currentFrame = Scene.getFrame();
-
-    // Memorize and restore pose using fence poses functionality
-    // This is equivalent to Edit -> Zero -> Zero Figure Pose -> Restore Pose
-    setFencePoses(oNode, currentFrame, [currentFrame + 1]);
-
-    // Optionally move to the new frame
-    Scene.setFrame(currentFrame + 1);
-  }
-}
-
-function getRomPaths(options) {
-  // Set up paths - should only need to change if using custom ROMs
-  var romSubDir = options.genesisVersion === 9 ? "Genesis 9" : "Genesis 8.1";
-  var sRomPath =
-    options["sPathDazLibrary"] + "DazToHue/Poses/" + romSubDir + "/";
-  var sMyRomPath = options["sPathCustomDthPoseAssets"] + romSubDir + "/";
-
-  var RomDK9 = sRomPath + "Common/Dicktator 9/DK9 - Dicktator.duf";
-  var RomGP9 = sRomPath + "Common/Golden Palace 9/GP9 - Golden Palace.duf";
-
-  var RomGP81 =
-    sMyRomPath + "Common/Golden Palace 8.1/GP8.1 - Golden Palace.duf";
-
-  var GENESIS = "G9";
-  if (options.genesisVersion === 8.1) {
-    GENESIS = "G8.1";
-  }
-  var LINEAR_JCM =
-    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
-  var LINEAR_JCM_FAC =
-    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Base.duf";
-  var LINEAR_JCM_FAC_MOUTH =
-    sRomPath + "Linear/" + GENESIS + " LINEAR JCM FAC - Mouth.duf";
-
-  var DQS_JCM = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
-  var DQS_JCM_FAC = sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Base.duf";
-  var DQS_JCM_FAC_MOUTH =
-    sRomPath + "DQS/" + GENESIS + " DQS JCM FAC - Mouth.duf";
-
-  var sJcmROM;
-  var sMouthROM;
-
-  if (!options["bDQS"]) {
-    if (options["bIncludeFAC"]) {
-      sJcmROM = LINEAR_JCM_FAC;
-      sMouthROM = LINEAR_JCM_FAC_MOUTH;
-    } else {
-      sJcmROM = LINEAR_JCM;
-    }
-  } else {
-    if (options["bIncludeFAC"]) {
-      sJcmROM = DQS_JCM_FAC;
-      sMouthROM = DQS_JCM_FAC_MOUTH;
-    } else {
-      sJcmROM = DQS_JCM;
-    }
-  }
-  return {
-    sJcmROM: sJcmROM,
-    sMouthROM: sMouthROM,
-    RomDK9: RomDK9,
-    RomGP9: RomGP9,
-    RomGP81: RomGP81,
-  };
-}
-
-ApplyDTHWorkflow(options);
+applyDTHWorkflow(options);
