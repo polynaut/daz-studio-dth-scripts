@@ -1,5 +1,6 @@
-// Improved MorphAnimationFrames.dsa using dthUtils functions
-// This file handles the creation of morph animation keyframes with improved code organization
+// Improved and Fixed MorphAnimationFrames.dsa
+// This file handles the creation of morph animation keyframes with improved organization
+// and robust error handling for different types of controls
 
 /**
  * Finds a control (morph, modifier, or pose) on a node by name
@@ -21,8 +22,19 @@ function findControl(selectedNode, controlName, type) {
       }
     }
   } else if (type === "morph") {
-    // Use the utility function for morphs
-    return getMorphPropFromNode(selectedNode, controlName);
+    // Try using dthUtils function if available
+    if (typeof getMorphPropFromNode === "function") {
+      var prop = getMorphPropFromNode(selectedNode, controlName);
+      if (prop) return prop;
+    }
+
+    // Fallback to manual search if not found or function not available
+    for (var m = 0; m < obj.getNumModifiers(); m++) {
+      var mod = obj.getModifier(m);
+      if (mod.getLabel() === controlName) {
+        return mod;
+      }
+    }
   } else if (type === "modifier") {
     // Check modifiers specifically for Modifier/Shape types
     for (var m = 0; m < obj.getNumModifiers(); m++) {
@@ -36,6 +48,70 @@ function findControl(selectedNode, controlName, type) {
     }
   }
   return null;
+}
+
+/**
+ * Gets the value channel for a control with robust error handling
+ * @param {Object} controlMod - The control modifier or property
+ * @returns {Object|null} The value channel or null if not found
+ */
+function getValueChannel(controlMod) {
+  try {
+    // Try different methods to get the value channel
+    if (controlMod.getValueChannel) {
+      return controlMod.getValueChannel();
+    } else if (controlMod.getValueControl) {
+      return controlMod.getValueControl();
+    } else if (controlMod.getChannel) {
+      return controlMod.getChannel(0);
+    }
+  } catch (e) {
+    print("ERROR getting value channel: " + e.message);
+  }
+  return null;
+}
+
+/**
+ * Sets a value on a control with robust error handling
+ * @param {Object} controlMod - The control modifier or property
+ * @param {string} controlName - Name of the control (for logging)
+ * @param {number} frame - Frame to set the value at
+ * @param {number} value - Value to set
+ * @param {string} type - Type of control
+ * @returns {boolean} Success status
+ */
+function setControlValue(controlMod, controlName, frame, value, type) {
+  var timeStep = Scene.getTimeStep();
+  try {
+    if (type === "pose") {
+      // For pose types, we directly set the value
+      controlMod.setValue(value);
+      return true;
+    } else {
+      // For morphs/modifiers, first try to get the value channel
+      var channel = getValueChannel(controlMod);
+
+      if (channel) {
+        // If using dthUtils, try its createMorphFrame function
+        if (typeof createMorphFrame === "function") {
+          return createMorphFrame(channel, frame, value);
+        } else {
+          // Otherwise, set value directly on the channel
+          channel.setValue(timeStep * frame, value);
+          return true;
+        }
+      } else if (controlMod.setValue) {
+        // If no channel but has setValue method, use that
+        controlMod.setValue(value);
+        return true;
+      }
+    }
+  } catch (e) {
+    print("ERROR setting " + controlName + ": " + e.message);
+  }
+
+  print("WARNING: Cannot set value for " + controlName);
+  return false;
 }
 
 /**
@@ -89,7 +165,6 @@ function parseControlConfig(config) {
  * @param {number} frame - Frame to reset controls at
  */
 function resetAllControlsAtFrame(controlConfigs, selectedNode, frame) {
-  var timeStep = Scene.getTimeStep();
   var processedControls = {}; // Track which controls we've already processed
 
   for (var i = 0; i < controlConfigs.length; i++) {
@@ -109,22 +184,25 @@ function resetAllControlsAtFrame(controlConfigs, selectedNode, frame) {
       var controlMod = findControl(selectedNode, control.name, control.type);
 
       if (controlMod) {
-        if (control.type === "pose") {
-          controlMod.setValue(control.resetValue);
-        } else {
-          var channel = controlMod.getValueChannel();
-          // Use createMorphFrame for better consistency
-          createMorphFrame(channel, frame, control.resetValue);
+        if (
+          setControlValue(
+            controlMod,
+            control.name,
+            frame,
+            control.resetValue,
+            control.type
+          )
+        ) {
+          print(
+            "Reset " +
+              control.type +
+              " " +
+              control.name +
+              " to " +
+              control.resetValue
+          );
+          processedControls[control.name] = true;
         }
-        processedControls[control.name] = true;
-        verbose(
-          "Reset " +
-            control.type +
-            " " +
-            control.name +
-            " to " +
-            control.resetValue
-        );
       }
     });
   }
@@ -153,32 +231,102 @@ function goToNLastFrame(nParam) {
 }
 
 /**
- * Adds morph animation frames to a node based on control configurations
- * @param {DzNode} oNodeRoot - Node to add morphs to
- * @param {Array} controlConfigs - Array of control configurations
+ * Collects all available controls on a node for diagnostic purposes
+ * @param {DzNode} selectedNode - Node to collect controls from
+ * @returns {Array} Array of control info objects
  */
-function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
-  var selectedNode = oNodeRoot;
+function collectAvailableControls(selectedNode) {
+  var allFoundControls = [];
+  var obj = selectedNode.getObject();
+  var numMods = obj.getNumModifiers();
 
-  // Get the time step for animation
-  var timeStep = Scene.getTimeStep();
-  print("Time step: " + timeStep.valueOf());
+  print("Number of modifiers found: " + numMods);
 
-  // Calculate total frames needed (accounting for linked controls counting as one frame)
-  var totalFrames = controlConfigs.length;
+  // Check modifiers (morphs and modifier/shapes)
+  for (var m = 0; m < numMods; m++) {
+    var mod = obj.getModifier(m);
+    var modLabel = mod.getLabel() || "";
+    var modName = mod.getName() || "";
+    var type = mod.inherits("DzModifier") ? "modifier" : "morph";
+    allFoundControls.push({
+      type: type,
+      label: modLabel,
+      name: modName,
+    });
+  }
 
-  // First, extend the timeline to accommodate our controls
+  // Check parameters (poses)
+  var numParams = selectedNode.getNumProperties();
+  print("Checking " + numParams + " parameters for poses...");
+  for (var p = 0; p < numParams; p++) {
+    var param = selectedNode.getProperty(p);
+    var paramLabel = param.getLabel() || "";
+    var paramName = param.getName() || "";
+    allFoundControls.push({
+      type: "pose",
+      label: paramLabel,
+      name: paramName,
+    });
+  }
+
+  return allFoundControls;
+}
+
+/**
+ * Reports any missing controls and prints available controls for diagnostics
+ * @param {Array} missingControls - Array of missing control names
+ * @param {Array} allFoundControls - Array of all available controls
+ */
+function reportMissingControls(missingControls, allFoundControls) {
+  if (missingControls.length > 0) {
+    print(
+      "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
+    );
+
+    // Sort the controls for better readability
+    allFoundControls.sort(function (a, b) {
+      return a.label.localeCompare(b.label);
+    });
+
+    for (var i = 0; i < allFoundControls.length; i++) {
+      var control = allFoundControls[i];
+      print(
+        "  " +
+          control.type +
+          ": " +
+          control.label +
+          (control.name !== control.label
+            ? " (Name: " + control.name + ")"
+            : "")
+      );
+    }
+  }
+}
+
+/**
+ * Extends the timeline if needed to accommodate new frames
+ * @param {number} currentFrame - Current frame position
+ * @param {number} framesNeeded - Total frames needed
+ * @returns {number} Current frame after extension
+ */
+function extendTimelineIfNeeded(currentFrame, framesNeeded) {
   var currentRange = Scene.getAnimRange();
-  var currentFrame = Scene.getFrame(); // Get current frame position
-  var framesNeeded = totalFrames + 2; // +2 for cleanup frames before and after
+  var timeStep = Scene.getTimeStep();
 
   // Calculate new end point
   var newEndPoint =
     currentRange.start + timeStep * (currentFrame + framesNeeded);
+
   if (newEndPoint > currentRange.end) {
-    // Use utility function to add frames
-    var framesToAdd = Math.ceil((newEndPoint - currentRange.end) / timeStep);
-    addFramesToAnim(framesToAdd);
+    // Use the utility function if available
+    if (typeof addFramesToAnim === "function") {
+      var framesToAdd = Math.ceil((newEndPoint - currentRange.end) / timeStep);
+      addFramesToAnim(framesToAdd);
+    } else {
+      // Otherwise set the range directly
+      var newTimeRange = new DzTimeRange(currentRange.start, newEndPoint);
+      Scene.setAnimRange(newTimeRange);
+    }
 
     var oldFrames = currentRange.end / timeStep;
     var newFrames = Scene.getAnimRange().end / timeStep;
@@ -191,6 +339,24 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     );
   }
 
+  return currentFrame;
+}
+
+/**
+ * Adds morph animation frames to a node based on control configurations
+ * @param {DzNode} oNodeRoot - Node to add morphs to
+ * @param {Array} controlConfigs - Array of control configurations
+ */
+function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
+  var selectedNode = oNodeRoot;
+
+  // Get the time step for animation
+  var timeStep = Scene.getTimeStep();
+  print("Time step: " + timeStep.valueOf());
+
+  // Calculate total frames needed
+  var totalFrames = controlConfigs.length;
+
   // Track missing controls and all found controls
   var missingControls = [];
   var allFoundControls = [];
@@ -200,22 +366,23 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     var label = selectedNode.getLabel();
     print("Selected node label: " + label);
 
-    // Get the object to access controls
-    var obj = selectedNode.getObject();
+    // Collect all available controls for diagnostics
+    allFoundControls = collectAvailableControls(selectedNode);
 
-    // Gather all available controls for diagnostics
-    collectAvailableControls(selectedNode, allFoundControls);
+    // Extend timeline if needed
+    var currentFrame = Scene.getFrame();
+    var framesNeeded = totalFrames + 2; // +2 for cleanup frames before and after
+    currentFrame = extendTimelineIfNeeded(currentFrame, framesNeeded);
 
     // Use current frame as start frame
     var startFrame = currentFrame;
     print("Starting at frame: " + startFrame);
     var endFrame = startFrame + totalFrames + 1;
 
-    // Reset frames
+    // Reset all frames first
     Scene.setFrame(startFrame - 1);
     resetAllControlsAtFrame(controlConfigs, selectedNode, startFrame - 1);
 
-    // Apply reset to all frames first
     for (var frame = startFrame; frame < endFrame; frame++) {
       Scene.setFrame(frame);
       resetAllControlsAtFrame(controlConfigs, selectedNode, frame);
@@ -265,28 +432,34 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
 
       // Then set all values at once for this frame
       controlsToSet.forEach(function (controlData) {
-        if (controlData.type === "pose") {
-          controlData.control.setValue(controlData.value);
-        } else {
-          var valueChannel = controlData.control.getValueChannel();
-          // Use the utility function for creating morph frames
-          createMorphFrame(valueChannel, targetFrame, controlData.value);
+        if (
+          setControlValue(
+            controlData.control,
+            controlData.name,
+            targetFrame,
+            controlData.value,
+            controlData.type
+          )
+        ) {
+          print(
+            "Frame " +
+              targetFrame +
+              ": Set " +
+              controlData.type +
+              " " +
+              controlData.name +
+              " = " +
+              controlData.value
+          );
         }
-        print(
-          "Frame " +
-            targetFrame +
-            ": Set " +
-            controlData.type +
-            " " +
-            controlData.name +
-            " = " +
-            controlData.value
-        );
       });
     }
 
     // Set all animations to use linear interpolation
-    setLinearInterp([selectedNode]);
+    if (typeof setLinearInterp === "function") {
+      print("Setting keys to linear interpolation");
+      setLinearInterp([selectedNode]);
+    }
 
     // Go to frame before the end to view the animation
     goToNLastFrame(2);
@@ -295,73 +468,6 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     reportMissingControls(missingControls, allFoundControls);
   } else {
     print("No nodes are selected.");
-  }
-}
-
-/**
- * Collects all available controls on a node for diagnostic purposes
- * @param {DzNode} selectedNode - Node to collect controls from
- * @param {Array} allFoundControls - Array to populate with control info
- */
-function collectAvailableControls(selectedNode, allFoundControls) {
-  var obj = selectedNode.getObject();
-  var numMods = obj.getNumModifiers();
-
-  // Check modifiers (morphs and modifier/shapes)
-  for (var m = 0; m < numMods; m++) {
-    var mod = obj.getModifier(m);
-    var modLabel = mod.getLabel() || "";
-    var modName = mod.getName() || "";
-    var type = mod.inherits("DzModifier") ? "modifier" : "morph";
-    allFoundControls.push({
-      type: type,
-      label: modLabel,
-      name: modName,
-    });
-  }
-
-  // Check parameters (poses)
-  var numParams = selectedNode.getNumProperties();
-  for (var p = 0; p < numParams; p++) {
-    var param = selectedNode.getProperty(p);
-    var paramLabel = param.getLabel() || "";
-    var paramName = param.getName() || "";
-    allFoundControls.push({
-      type: "pose",
-      label: paramLabel,
-      name: paramName,
-    });
-  }
-}
-
-/**
- * Reports any missing controls and prints available controls for diagnostics
- * @param {Array} missingControls - Array of missing control names
- * @param {Array} allFoundControls - Array of all available controls
- */
-function reportMissingControls(missingControls, allFoundControls) {
-  if (missingControls.length > 0) {
-    print(
-      "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
-    );
-
-    // Sort the controls for better readability
-    allFoundControls.sort(function (a, b) {
-      return a.label.localeCompare(b.label);
-    });
-
-    for (var i = 0; i < allFoundControls.length; i++) {
-      var control = allFoundControls[i];
-      print(
-        "  " +
-          control.type +
-          ": " +
-          control.label +
-          (control.name !== control.label
-            ? " (Name: " + control.name + ")"
-            : "")
-      );
-    }
   }
 }
 
