@@ -1,5 +1,8 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
-include(dir_self.filePath("utils/rom/index.dsa"));
+include(dir_self.filePath("utils/rom/applyDefaultRoms.dsa"));
+include(dir_self.filePath("utils/rom/applyDicktator.dsa"));
+include(dir_self.filePath("utils/rom/applyGoldenPalace.dsa"));
+include(dir_self.filePath("utils/rom/getRomPaths.dsa"));
 include(dir_self.filePath("utils/dthUtils.dsa"));
 include(dir_self.filePath("utils/modifyJcmRom.dsa"));
 include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
