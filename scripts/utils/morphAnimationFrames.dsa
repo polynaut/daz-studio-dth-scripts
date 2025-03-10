@@ -159,12 +159,61 @@ function parseControlConfig(config) {
 }
 
 /**
+ * Function to check if a frame contains a fence marker
+ * @param {Array} controlConfigs - Array of control configurations
+ * @param {number} frame - Frame to to check
+ * @returns {boolean} True if the frame is a fence frame
+ */
+function isFenceFrame(controlConfigs, frame) {
+  if (frame < 0 || frame >= controlConfigs.length) {
+    return false;
+  }
+
+  var config = controlConfigs[frame];
+  if (typeof config === "object" && config.type === "fence") {
+    return true;
+  }
+
+  if (Array.isArray(config)) {
+    return false; // Linked controls are not fence types
+  }
+
+  var parsedConfig = parseControlConfig(config);
+  return parsedConfig.isFence;
+}
+
+/**
  * Sets all controls to their reset values at a specific frame
  * @param {Array} controlConfigs - Array of control configurations
  * @param {DzNode} selectedNode - Node containing the controls
  * @param {number} frame - Frame to reset controls at
+ * @param {number} startFrame - The frame where we started
  */
-function resetAllControlsAtFrame(controlConfigs, selectedNode, frame) {
+function resetAllControlsAtFrame(
+  controlConfigs,
+  selectedNode,
+  frame,
+  startFrame
+) {
+  // Calculate the corresponding config index for this frame
+  var configIndex = frame - startFrame;
+
+  // Handle fence frames separately
+  if (isFenceFrame(controlConfigs, configIndex)) {
+    if (frame > 0) {
+      print(
+        "Setting fence pose for",
+        selectedNode.objectName,
+        "from frame",
+        0,
+        "to",
+        frame
+      );
+      setFencePoses(selectedNode, 0, [frame]);
+    }
+    return;
+  }
+
   var processedControls = {}; // Track which controls we've already processed
 
   for (var i = 0; i < controlConfigs.length; i++) {
@@ -193,14 +242,6 @@ function resetAllControlsAtFrame(controlConfigs, selectedNode, frame) {
             control.type
           )
         ) {
-          print(
-            "Reset " +
-              control.type +
-              " " +
-              control.name +
-              " to " +
-              control.resetValue
-          );
           processedControls[control.name] = true;
         }
       }
@@ -280,8 +321,12 @@ function collectAvailableControls(selectedNode) {
 function reportMissingControls(missingControls, allFoundControls) {
   if (missingControls.length > 0) {
     print(
-      "\n⚠️ Some controls were not found. Here is a complete list of all available controls:"
+      "Some controls were not found. Here is a complete list of all available controls:"
     );
+    for (var i = 0; i < missingControls.length; i++) {
+      var missing = missingControls[i];
+      print("Missing:  " + missing);
+    }
 
     // Sort the controls for better readability
     allFoundControls.sort(function (a, b) {
@@ -356,6 +401,9 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
 
   // Calculate total frames needed
   var totalFrames = controlConfigs.length;
+  if (isFenceFrame(controlConfigs, controlConfigs.length - 1)) {
+    totalFrames--;
+  }
 
   // Track missing controls and all found controls
   var missingControls = [];
@@ -371,7 +419,7 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
 
     // Extend timeline if needed
     var currentFrame = Scene.getFrame();
-    var framesNeeded = totalFrames + 2; // +2 for cleanup frames before and after
+    var framesNeeded = totalFrames + 1;
     currentFrame = extendTimelineIfNeeded(currentFrame, framesNeeded);
 
     // Use current frame as start frame
@@ -380,12 +428,19 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     var endFrame = startFrame + totalFrames + 1;
 
     // Reset all frames first
-    Scene.setFrame(startFrame - 1);
-    resetAllControlsAtFrame(controlConfigs, selectedNode, startFrame - 1);
+    if (startFrame - 1 > 0) {
+      Scene.setFrame(startFrame - 1);
+      resetAllControlsAtFrame(
+        controlConfigs,
+        selectedNode,
+        startFrame - 1,
+        startFrame
+      );
+    }
 
     for (var frame = startFrame; frame < endFrame; frame++) {
       Scene.setFrame(frame);
-      resetAllControlsAtFrame(controlConfigs, selectedNode, frame);
+      resetAllControlsAtFrame(controlConfigs, selectedNode, frame, startFrame);
     }
 
     // Then set each control or control group to its target value at its specific frame

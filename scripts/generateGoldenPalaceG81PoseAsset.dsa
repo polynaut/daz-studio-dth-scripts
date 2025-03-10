@@ -1,6 +1,8 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
 include(dir_self.filePath("utils/dthUtils.dsa"));
 include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
+// Special import for your morph animation configs
+include(dir_self.filePath("morphAnimationConfigs/laraG81.dsa"));
 
 // https://docs.google.com/spreadsheets/d/1dtyecSuk-GxLPn97I6JsYiqvP6xrRNmuRkOrU8oLsGM/edit?gid=764910584#gid=764910584
 /**
@@ -15,94 +17,6 @@ include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
  *   reset?: number  // Optional reset value, defaults to 0 if not specified
  * }
  */
-var morphConfigs = [
-  { type: "fence" }, // 319
-  { type: "morph", name: "LabiaMajora_Pinch1 Left", value: 1.1 }, // 320
-  { type: "morph", name: "LabiaMajora_Pinch1 Left", value: -0.5 }, // 321
-  { type: "morph", name: "LabiaMajora_Pinch2 Left", value: 1.5 }, // 322
-  { type: "morph", name: "LabiaMajora_Pinch2 Left", value: -0.5 }, // 323
-  { type: "morph", name: "LabiaMajora_Push1 Left", value: 1 }, // 324
-  { type: "morph", name: "LabiaMajora_Push1 Left", value: -1 }, // 325
-  { type: "morph", name: "LabiaMajora_Push2 Left", value: 1 }, // 326
-  { type: "morph", name: "LabiaMajora_Push2 Left", value: -1 }, // 327
-  { type: "morph", name: "LabiaMajora_Push3 Left", value: 1 }, // 328
-  { type: "morph", name: "LabiaMajora_Push3 Left", value: -1 }, // 329
-
-  { type: "morph", name: "LabiaMajora_Pinch1Right", value: 1.1 }, // 332
-  { type: "morph", name: "LabiaMajora_Pinch1Right", value: -0.5 }, // 333
-  { type: "morph", name: "LabiaMajora_Pinch2 Right", value: 1.5 }, // 334
-  { type: "morph", name: "LabiaMajora_Pinch2 Right", value: -0.5 }, // 335
-  { type: "morph", name: "LabiaMajora_Push1 Right", value: 1 }, // 336
-  { type: "morph", name: "LabiaMajora_Push1 Right", value: -1 }, // 337
-  { type: "morph", name: "LabiaMajora_Push2 Right", value: 1 }, // 338
-  { type: "morph", name: "LabiaMajora_Push2 Right", value: -1 }, // 339
-  { type: "morph", name: "LabiaMajora_Push3 Right", value: 1 }, // 340
-  { type: "morph", name: "LabiaMajora_Push3 Right", value: -1 }, // 341
-
-  { type: "morph", name: "LabiaMinora_Pinch1Left", value: 1 }, // 344
-  { type: "morph", name: "LabiaMinora_Pinch1Left", value: -1 }, // 345
-  { type: "morph", name: "LabiaMinora_Pinch2Left", value: 1 }, // 346
-  { type: "morph", name: "LabiaMinora_Pinch2Left", value: -1 }, // 347
-  { type: "morph", name: "LabiaMinora_MoveLeft01", value: 4 }, // 348
-  { type: "morph", name: "LabiaMinora_MoveLeft01", value: -4 }, // 349
-  { type: "morph", name: "LabiaMinora_MoveLeft02", value: 4 }, // 350
-  { type: "morph", name: "LabiaMinora_MoveLeft02", value: -4 }, // 351
-  { type: "morph", name: "LabiaMinora_MoveLeft03", value: 4 }, // 352
-  { type: "morph", name: "LabiaMinora_MoveLeft03", value: -4 }, // 353
-  { type: "morph", name: "LabiaMinora_MoveLeft04", value: 4 }, // 354
-  { type: "morph", name: "LabiaMinora_MoveLeft04", value: -4 }, // 355
-  { type: "morph", name: "LabiaMinora_MoveLeft05", value: 4 }, // 356
-  { type: "morph", name: "LabiaMinora_MoveLeft05", value: -4 }, // 357
-  { type: "morph", name: "LabiaMinora_MoveLeft06", value: 4 }, // 358
-  { type: "morph", name: "LabiaMinora_MoveLeft06", value: -4 }, // 359
-  { type: "morph", name: "LabiaMinora_MoveLeft07", value: 4 }, // 360
-  { type: "morph", name: "LabiaMinora_MoveLeft07", value: -4 }, // 361
-  { type: "morph", name: "LabiaMinora_MoveLeft08", value: 4 }, // 362
-  { type: "morph", name: "LabiaMinora_MoveLeft08", value: -4 }, // 363
-  { type: "morph", name: "LabiaMinora_MoveLeft09", value: 4 }, // 364
-  { type: "morph", name: "LabiaMinora_MoveLeft09", value: -4 }, // 365
-  { type: "morph", name: "LabiaMinora_MoveLeft10", value: 4 }, // 366
-  { type: "morph", name: "LabiaMinora_MoveLeft10", value: -4 }, // 367
-  { type: "morph", name: "LabiaMinora_MoveLeft11", value: 4 }, // 368
-  { type: "morph", name: "LabiaMinora_MoveLeft11", value: -4 }, // 369
-
-  { type: "morph", name: "LabiaMinora_Pinch1Right", value: 1 }, // 378
-  { type: "morph", name: "LabiaMinora_Pinch1Right", value: -1 }, // 379
-  { type: "morph", name: "LabiaMinora_Pinch2Right", value: 1 }, // 380
-  { type: "morph", name: "LabiaMinora_Pinch2Right", value: -1 }, // 381
-  { type: "morph", name: "LabiaMinora_MoveRight01", value: 4 }, // 382
-  { type: "morph", name: "LabiaMinora_MoveRight01", value: -4 }, // 383
-  { type: "morph", name: "LabiaMinora_MoveRight02", value: 4 }, // 384
-  { type: "morph", name: "LabiaMinora_MoveRight02", value: -4 }, // 385
-  { type: "morph", name: "LabiaMinora_MoveRight03", value: 4 }, // 386
-  { type: "morph", name: "LabiaMinora_MoveRight03", value: -4 }, // 387
-  { type: "morph", name: "LabiaMinora_MoveRight04", value: 4 }, // 388
-  { type: "morph", name: "LabiaMinora_MoveRight04", value: -4 }, // 389
-  { type: "morph", name: "LabiaMinora_MoveRight05", value: 4 }, // 390
-  { type: "morph", name: "LabiaMinora_MoveRight05", value: -4 }, // 391
-  { type: "morph", name: "LabiaMinora_MoveRight06", value: 4 }, // 392
-  { type: "morph", name: "LabiaMinora_MoveRight06", value: -4 }, // 393
-  { type: "morph", name: "LabiaMinora_MoveRight07", value: 4 }, // 394
-  { type: "morph", name: "LabiaMinora_MoveRight07", value: -4 }, // 395
-  { type: "morph", name: "LabiaMinora_MoveRight08", value: 4 }, // 396
-  { type: "morph", name: "LabiaMinora_MoveRight08", value: -4 }, // 397
-  { type: "morph", name: "LabiaMinora_MoveRight09", value: 4 }, // 398
-  { type: "morph", name: "LabiaMinora_MoveRight09", value: -4 }, // 399
-  { type: "morph", name: "LabiaMinora_MoveRight10", value: 4 }, // 400
-  { type: "morph", name: "LabiaMinora_MoveRight10", value: -4 }, // 401
-  { type: "morph", name: "LabiaMinora_MoveRight11", value: 4 }, // 402
-  { type: "morph", name: "LabiaMinora_MoveRight11", value: -4 }, // 403
-
-  { type: "fence" }, // 414
-  { type: "morph", name: "Vagina_Open 3", value: 1 }, // 415
-  { type: "morph", name: "Vagina_Open_Front Stretch", value: 1 }, // 416
-  { type: "morph", name: "Vagina_Open_SideStretch", value: 1 }, // 417
-  { type: "fence" }, // 418
-  { type: "morph", name: "Anus_Open3", value: 1 }, // 419
-  { type: "morph", name: "Anus Gape_Out", value: 1 }, // 420
-  { type: "fence" }, // 421
-  { type: "morph", name: "Clitoris Inflate", value: 1 }, // 422
-];
 
 var oNodeRoot = Scene.getPrimarySelection();
 var oNodeGP = oNodeRoot.findNodeChildByLabel("Golden Palace Gens");
@@ -114,4 +28,4 @@ if (!oNodeGP) {
   );
   return false;
 }
-generateMorphAnimation(oNodeGP, morphConfigs);
+generateMorphAnimation(oNodeGP, getGENControlConfig());

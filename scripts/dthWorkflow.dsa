@@ -23,7 +23,7 @@ var options = {
   FACsDetailStrength: 1.0, // only used for G9
   FlexionStrength: 1.0, // only used for G9
   // Offsets for the fence poses, relative to the first frame of the GP ROM file
-  aGPFenceOffsets: [0, 83, 87, 90],
+  aGPFenceOffsets: [0, 73, 77, 80],
   // Offsets for the fence poses, relative to the first frame of the DK ROM file
   // Ex. The standard offsets as of DTH 1.6.6:
   aDKFenceOffsets: [0, 33, 46, 47, 49, 52],
@@ -116,9 +116,9 @@ function applyDTHWorkflow(options) {
 
     // Or we can simply apply an existing pose asset with the full animation
     // -> downside, this will ask the user again to "extend the timeline with x frames", but it's much faster
-    // addFramesToAnim();
-    // var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    // applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);
+    /*addFramesToAnim();
+    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
+    applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);*/
   }
 
   /** PHY      *****************************************************/
