@@ -510,12 +510,6 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
       });
     }
 
-    // Set all animations to use linear interpolation
-    /*if (typeof setLinearInterp === "function") {
-      print("Setting keys to linear interpolation");
-      setLinearInterp([selectedNode]);
-    }*/
-
     // Go to frame before the end to view the animation
     goToNLastFrame(1);
 
