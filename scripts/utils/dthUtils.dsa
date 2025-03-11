@@ -57,12 +57,6 @@ function setLinearInterp(oNodes, startFrame, endFrame) {
         oProp.getValue(keyTime),
         DzFloatProperty.LINEAR_INTERP
       );
-      print(
-        "Set interp to linear for",
-        oProp.getLabel(),
-        j,
-        oProp.getKeyInterpolationType(j)
-      );
     }
   }
 }
@@ -125,10 +119,12 @@ function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
   print("Memorizing figure for:", oNode.getLabel(), "at frame", iSourceFrame);
   triggerAction("DzMemorizeFigureAction");
   for (var i in aTargetFrames) {
-    var frame = aTargetFrames[i];
-    Scene.setTime(frame * timeStep);
-    print("Restoring figure for:", oNode.getLabel(), "at frame", frame);
-    triggerAction("DzRestoreFigureAction");
+    if (aTargetFrames.hasOwnProperty(i)) {
+      var frame = aTargetFrames[i];
+      Scene.setTime(frame * timeStep);
+      print("Restoring figure for:", oNode.getLabel(), "at frame", frame);
+      triggerAction("DzRestoreFigureAction");
+    }
   }
 }
 

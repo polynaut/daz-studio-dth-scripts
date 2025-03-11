@@ -10,7 +10,7 @@
 
 function getGENControlConfig() {
   return [
-    // { type: "fence" }, // 319
+    { type: "fence" }, // 319
     { type: "morph", name: "LabiaMajora_Pinch1 Left", value: 1.1 }, // 320
     { type: "morph", name: "LabiaMajora_Pinch1 Left", value: -0.5 }, // 321
     { type: "morph", name: "LabiaMajora_Pinch2 Left", value: 1.5 }, // 322
@@ -87,14 +87,14 @@ function getGENControlConfig() {
     { type: "morph", name: "LabiaMinora_MoveRight11", value: 4 }, // 402
     { type: "morph", name: "LabiaMinora_MoveRight11", value: -4 }, // 403
 
-    // { type: "fence" },   // 414
+    { type: "fence" }, // 414
     { type: "morph", name: "Vagina_Open 3", value: 1 }, // 415
-    { type: "morph", name: "Vagina_Open_Front Stretch", value: 1 }, // 416
+    { type: "pose", name: "Vagina_Open_Front Stretch", value: 1 }, // 416
     { type: "morph", name: "Vagina_Open_SideStretch", value: 1 }, // 417
-    // { type: "fence" },   // 418
+    { type: "fence" }, // 418
     { type: "morph", name: "Anus_Open3", value: 1 }, // 419
     { type: "morph", name: "Anus Gape_Out", value: 1 }, // 420
-    // { type: "fence" },   // 421
+    { type: "fence" }, // 421
     { type: "morph", name: "Clitoris Inflate", value: 1 }, // 422
   ];
 }

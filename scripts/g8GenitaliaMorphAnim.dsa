@@ -1,5 +1,6 @@
 var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
-include(dir_self.filePath("utils/MorphAnimationFrames.dsa"));
+include(dir_self.filePath("utils/dthUtils.dsa"));
+include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
 
 // Array of controls to animate
 // Each entry can be either a single control object or an array of linked control objects
