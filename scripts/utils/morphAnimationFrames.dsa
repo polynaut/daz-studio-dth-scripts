@@ -511,13 +511,13 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     }
 
     // Set all animations to use linear interpolation
-    if (typeof setLinearInterp === "function") {
+    /*if (typeof setLinearInterp === "function") {
       print("Setting keys to linear interpolation");
       setLinearInterp([selectedNode]);
-    }
+    }*/
 
     // Go to frame before the end to view the animation
-    goToNLastFrame(2);
+    goToNLastFrame(1);
 
     // If there were any missing controls, print all available controls
     reportMissingControls(missingControls, allFoundControls);
