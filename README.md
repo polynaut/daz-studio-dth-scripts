@@ -54,6 +54,12 @@ var options = {
 };
 ```
 
+After setting up the options, you will also find an import for a file called `include(dir_self.filePath("morphAnimationConfigs/laraG81.dsa"));`. Copy this file for your specific character and adjust all arrays of different morphs like EXP, GEN and FBM.
+
+The provided file will generate my personal "Lara Croft" character which is based on Genesis 8.1, including a full pose asset with Golden Palace 8.1
+
+// TODO: add morph list for Golden Palace 9
+
 ### Import of Morph Settings
 
 ## Script `fullBodyMorphAnim`
