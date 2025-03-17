@@ -15,7 +15,7 @@ var options = {
   sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
   sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
   genesisVersion: 8.1, // 8.1 or 9
-  // Set true to include use the FAC version of the ROM
+  // Set true to include the FAC version of the ROM
   bIncludeFAC: true,
   bIncludeDK: false,
   bIncludeGP: true,

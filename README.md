@@ -6,9 +6,55 @@ A collection of scripts for Daz Studio and DTH
 
 > VSCode users can add a new entry in `file associations` for `\*.dsa` files with the language `javascript` to get syntax highlighting.
 
+## Setup
+
+Easiest way is to clone the entire repository in the `Scripts` folder of your Daz3D installation.
+
+- Locate your `My DAZ 3D Library` folder on hour harddrive, in my case it is `D:\DAZ 3D\My DAZ 3D Library`
+- Within thid folder, you will find a `Scripts` subfolder.
+- Now open a terminal of your liking, navigate to this folder `D:\DAZ 3D\My DAZ 3D Library\Scripts` and execute `git clone git@github.com:polynaut/daz-studio-dth-scripts.git`, this will create copy of the entire repository in your scripts folder
+- Start Daz3D Studio (or restart it), and you will find all the scripts in your `Content Library`
+
 ## DTH Workflow
 
-The script `dthWorkflow.dsa` is the main entry point.
+The file `dthWorkflow.dsa` is the main script you want to use. It is a "one-click" solution for all aspects of DTH:
+
+- Applying the JCM pose asset(s) of your liking (Genesis 8.1 or Genesis 9)
+- Giving the ability to add additional morphs on JCM frames based on bending angles of certain bones.
+- Extending the timeline with EXP, GEN and FBM morphs - generated "on-the-fly" without pose asset files. Just how you define them.
+
+To use it properly, you must edit the following settings. Open the script with any text editor (i recommend VSCode) and edit:
+
+### Options
+
+```javascript
+var options = {
+  // Path to your daz studio library, always use "/" as the path separator, on mac and windows
+  sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
+  genesisVersion: 8.1, // 8.1 or 9
+  // Set true to include the FAC version of the ROM
+  bIncludeFAC: true,
+  bIncludeDK: false,
+  bIncludeGP: true,
+  bDQS: true, // set true to enable Dual Quaternion Skinning, defaults to Linear
+  FACsDetailStrength: 1.0, // only used for G9
+  FlexionStrength: 1.0, // only used for G9
+  // Offsets for the fence poses, relative to the first frame of the GP ROM file
+  aGPFenceOffsets: [0, 73, 77, 80],
+  // Offsets for the fence poses, relative to the first frame of the DK ROM file
+  // Ex. The standard offsets as of DTH 1.6.6:
+  aDKFenceOffsets: [0, 33, 46, 47, 49, 52],
+  //   oMISConfig: {
+  //     nodeName: "Genesis 8 Female Genitalia",
+  //     morphConfigs: [
+  //       { type: "modifier", name: "OpenDeep", value: 1 },
+  //       { type: "modifier", name: "Biglips", value: 1 },
+  //     ],
+  //   },
+};
+```
+
+### Import of Morph Settings
 
 ## Script `fullBodyMorphAnim`
 
