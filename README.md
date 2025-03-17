@@ -236,15 +236,6 @@ With the example configuration in place, the script will go trough the existing 
 - Applies all defined morphs of the list of positive or negative morphs, based on the current angle
 - Automatically resets all morphs on the frames "around" to 0 again to fight the default interplotation of daz
 
-## Use the scripts
+## Credits
 
-After you have finished the configuration of your script, save it to `My DAZ Library/Scripts` with any name and the file extension `.dsa`. After a restart of Daz Studio, you can easily find the script in the `Content Library` tab in the `Scripts` folder and by double clicking it, you will execute it.
-
-⚠️ Attention!
-
-The scripts can take a few minutes to execute!
-
-💡 Good to know
-
-- The script language of Daz Studio is based on javascript.
-- You can copy paste a script into the Script IDE of Daz Studio to get a console output on execute.
+These scripts where made with help of https://claude.ai, and https://github.com/soltude/DazToHue-Scripts ❤️
