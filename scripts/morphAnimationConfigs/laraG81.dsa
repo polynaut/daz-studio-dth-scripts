@@ -103,13 +103,6 @@ function getMISControlConfig() {
   return [];
 }
 
-function getGensMISControlConfig() {
-  return [
-    { type: "modifier", name: "OpenDeep", value: 1 },
-    { type: "modifier", name: "Biglips", value: 1 },
-  ];
-}
-
 function getEXPControlConfig() {
   return [
     { type: "morph", name: "DJ Yua HD 8.1 Anger", value: 1 },

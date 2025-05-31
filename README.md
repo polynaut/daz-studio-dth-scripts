@@ -31,26 +31,32 @@ To use it properly, you must edit the following settings. Open the script with a
 var options = {
   // Path to your daz studio library, always use "/" as the path separator, on mac and windows
   sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
+  sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
   genesisVersion: 8.1, // 8.1 or 9
-  // Set true to include the FAC version of the ROM
-  bIncludeFAC: true,
-  bIncludeDK: false,
-  bIncludeGP: true,
-  bDQS: true, // set true to enable Dual Quaternion Skinning, defaults to Linear
-  FACsDetailStrength: 1.0, // only used for G9
-  FlexionStrength: 1.0, // only used for G9
-  // Offsets for the fence poses, relative to the first frame of the GP ROM file
-  aGPFenceOffsets: [0, 73, 77, 80],
+  bIncludeFAC: true, // Set true to include the FAC version of the JCM ROM
+
+  bIncludeDK: false, // Set true to include the Dicktator ROM
   // Offsets for the fence poses, relative to the first frame of the DK ROM file
   // Ex. The standard offsets as of DTH 1.6.6:
   aDKFenceOffsets: [0, 33, 46, 47, 49, 52],
-  //   oMISConfig: {
-  //     nodeName: "Genesis 8 Female Genitalia",
-  //     morphConfigs: [
-  //       { type: "modifier", name: "OpenDeep", value: 1 },
-  //       { type: "modifier", name: "Biglips", value: 1 },
-  //     ],
-  //   },
+
+  bIncludeGP: true, // Set true to include the Golden Palace ROM
+  // Offsets for the fence poses, relative to the first frame of the GP ROM file
+  aGPFenceOffsets: [0, 73, 77, 80],
+
+  // Miscellaneous (MIS) morphs to apply to the Genesis 8 Anatomical Elements
+  // This is only used if bIncludeGP is false, otherwise the Golden Palace ROM will be used
+  oMISConfig: {
+    nodeName: "Genesis 8 Female Genitalia",
+    morphConfigs: [
+      { type: "modifier", name: "OpenDeep", value: 1 },
+      { type: "modifier", name: "Biglips", value: 1 },
+    ],
+  },
+
+  bDQS: true, // Set true to enable Dual Quaternion Skinning, defaults to Linear
+  FACsDetailStrength: 1.0, // only used for G9
+  FlexionStrength: 1.0, // only used for G9
 };
 ```
 
