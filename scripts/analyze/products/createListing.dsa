@@ -5,6 +5,317 @@ var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
 include(dir_self.filePath("getInstalledProducts.dsa"));
 include(dir_self.filePath("getUsedAssets.dsa"));
 
+// Include the matching logic directly in this file for now
+// (You could also put this in a separate file and include it)
+
+function findProductMatches(usedAssets, installedProducts) {
+  var matches = [];
+  var unmatched = [];
+
+  // Create multiple lookup maps for different matching strategies
+  var productNameMap = {};
+  var productKeywordMap = {};
+  var productSkuMap = {};
+
+  // Build lookup maps
+  for (var i = 0; i < installedProducts.length; i++) {
+    var product = installedProducts[i];
+    var name = product.name.toLowerCase();
+
+    // Direct name mapping
+    productNameMap[name] = product;
+
+    // SKU mapping
+    productSkuMap[product.sku] = product;
+
+    // Keyword extraction for fuzzy matching
+    var keywords = extractKeywords(name);
+    for (var k = 0; k < keywords.length; k++) {
+      if (!productKeywordMap[keywords[k]]) {
+        productKeywordMap[keywords[k]] = [];
+      }
+      productKeywordMap[keywords[k]].push(product);
+    }
+  }
+
+  // Try to match each asset
+  for (var j = 0; j < usedAssets.length; j++) {
+    var asset = usedAssets[j];
+    var matchedProduct = null;
+    var matchMethod = "";
+
+    // Skip bone/skeleton assets - they're part of base Genesis
+    if (isBoneOrSkeleton(asset)) {
+      continue;
+    }
+
+    // Strategy 1: SKU extraction from technical name (try this first for clothing items)
+    matchedProduct = findSkuMatch(asset, productSkuMap);
+    if (matchedProduct) {
+      matchMethod = "SKU Match";
+    }
+
+    // Strategy 2: Direct technical name matching
+    if (!matchedProduct) {
+      matchedProduct = findDirectMatch(asset, productNameMap);
+      if (matchedProduct) {
+        matchMethod = "Direct Match";
+      }
+    }
+
+    // Strategy 3: Keyword-based fuzzy matching
+    if (!matchedProduct) {
+      matchedProduct = findKeywordMatch(asset, productKeywordMap);
+      if (matchedProduct) {
+        matchMethod = "Keyword Match";
+      }
+    }
+
+    // Strategy 4: Genesis base assets
+    if (!matchedProduct) {
+      matchedProduct = findGenesisBaseMatch(asset, installedProducts);
+      if (matchedProduct) {
+        matchMethod = "Genesis Base Match";
+      }
+    }
+
+    if (matchedProduct) {
+      matches.push({
+        asset: asset,
+        product: matchedProduct,
+        method: matchMethod,
+      });
+    } else {
+      unmatched.push(asset);
+    }
+  }
+
+  return {
+    matches: matches,
+    unmatched: unmatched,
+  };
+}
+
+function findSkuMatch(asset, productSkuMap) {
+  var techName = asset.technicalName;
+
+  // Look for SKU patterns in technical names
+  // Examples: "SaltBikini_Bra_2050", "Bags_11509", "GoldenPalace_2254"
+  var skuMatch = techName.match(/_(\d{4,5})$/);
+  if (skuMatch) {
+    var sku = skuMatch[1];
+    // Try different SKU formats
+    var skuVariants = [sku + "-1", "0" + sku + "-1", sku + "-01"];
+
+    for (var i = 0; i < skuVariants.length; i++) {
+      if (productSkuMap[skuVariants[i]]) {
+        return productSkuMap[skuVariants[i]];
+      }
+    }
+  }
+
+  return null;
+}
+
+function findDirectMatch(asset, productNameMap) {
+  var assetName = asset.name.toLowerCase();
+  var techName = asset.technicalName.toLowerCase();
+
+  // Try partial matches for common patterns
+  for (var productName in productNameMap) {
+    if (
+      productName.indexOf("cartoonized") !== -1 &&
+      (assetName.indexOf("cartoon") !== -1 ||
+        techName.indexOf("cartoon") !== -1)
+    ) {
+      return productNameMap[productName];
+    }
+  }
+
+  return null;
+}
+
+function findKeywordMatch(asset, productKeywordMap) {
+  var assetKeywords = extractKeywords(asset.name + " " + asset.technicalName);
+  var candidateProducts = {};
+  var maxScore = 0;
+  var bestMatch = null;
+
+  // Score products based on keyword overlap
+  for (var i = 0; i < assetKeywords.length; i++) {
+    var keyword = assetKeywords[i];
+    if (productKeywordMap[keyword]) {
+      var products = productKeywordMap[keyword];
+      for (var j = 0; j < products.length; j++) {
+        var product = products[j];
+        var productId = product.name;
+        if (!candidateProducts[productId]) {
+          candidateProducts[productId] = { product: product, score: 0 };
+        }
+        candidateProducts[productId].score++;
+      }
+    }
+  }
+
+  // Find best scoring product
+  for (var productId in candidateProducts) {
+    if (candidateProducts[productId].score > maxScore) {
+      maxScore = candidateProducts[productId].score;
+      bestMatch = candidateProducts[productId].product;
+    }
+  }
+
+  // Only return if we have a reasonable confidence (at least 2 keyword matches)
+  return maxScore >= 2 ? bestMatch : null;
+}
+
+function findGenesisBaseMatch(asset, installedProducts) {
+  var name = asset.name.toLowerCase();
+  var techName = asset.technicalName.toLowerCase();
+
+  // Check if it's a Genesis base asset
+  if (name.indexOf("genesis") !== -1 || techName.indexOf("genesis") !== -1) {
+    // Try to determine Genesis generation
+    var generation = "";
+    if (
+      name.indexOf("genesis 8.1") !== -1 ||
+      techName.indexOf("genesis8_1") !== -1
+    ) {
+      generation = "genesis 8";
+    } else if (
+      name.indexOf("genesis 8") !== -1 ||
+      techName.indexOf("genesis8") !== -1
+    ) {
+      generation = "genesis 8";
+    } else if (
+      name.indexOf("genesis 9") !== -1 ||
+      techName.indexOf("genesis9") !== -1
+    ) {
+      generation = "genesis 9";
+    } else if (
+      name.indexOf("genesis 3") !== -1 ||
+      techName.indexOf("genesis3") !== -1
+    ) {
+      generation = "genesis 3";
+    } else if (
+      name.indexOf("genesis 2") !== -1 ||
+      techName.indexOf("genesis2") !== -1
+    ) {
+      generation = "genesis 2";
+    } else if (name.indexOf("genesis") !== -1) {
+      generation = "genesis";
+    }
+
+    if (generation) {
+      // Look for matching starter essentials
+      for (var i = 0; i < installedProducts.length; i++) {
+        var product = installedProducts[i];
+        var productName = product.name.toLowerCase();
+        if (
+          productName.indexOf(generation) !== -1 &&
+          productName.indexOf("starter essentials") !== -1
+        ) {
+          return product;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function extractKeywords(text) {
+  var keywords = [];
+  var cleaned = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ") // Remove special chars
+    .replace(/\s+/g, " ") // Normalize whitespace
+    .trim();
+
+  var words = cleaned.split(" ");
+
+  for (var i = 0; i < words.length; i++) {
+    var word = words[i];
+    // Skip very short words and common terms
+    if (
+      word.length > 2 &&
+      word !== "for" &&
+      word !== "and" &&
+      word !== "the" &&
+      word !== "genesis" &&
+      word !== "female" &&
+      word !== "male"
+    ) {
+      keywords.push(word);
+    }
+  }
+
+  return keywords;
+}
+
+function isBoneOrSkeleton(asset) {
+  var name = asset.name.toLowerCase();
+  var techName = asset.technicalName.toLowerCase();
+
+  // Common bone/skeleton indicators
+  var boneKeywords = [
+    "thigh",
+    "shin",
+    "foot",
+    "toe",
+    "hand",
+    "finger",
+    "thumb",
+    "shoulder",
+    "forearm",
+    "collar",
+    "neck",
+    "head",
+    "jaw",
+    "abdomen",
+    "chest",
+    "pelvis",
+    "hip",
+    "spine",
+    "pectoral",
+    "eye",
+    "ear",
+    "nostril",
+    "eyelid",
+    "brow",
+    "lip",
+    "carpal",
+    "index",
+    "ring",
+    "pinky",
+    "mid",
+    "metatarsal",
+    "bigToe",
+  ];
+
+  // Check if it's a standard bone name
+  for (var i = 0; i < boneKeywords.length; i++) {
+    if (
+      name.indexOf(boneKeywords[i]) !== -1 ||
+      techName.indexOf(boneKeywords[i]) !== -1
+    ) {
+      return true;
+    }
+  }
+
+  // Check for bone naming patterns
+  if (
+    techName.match(/^[lr][A-Z]/) || // lThigh, rShin, etc.
+    techName.match(/^(upper|lower|mid)/i) || // upperTeeth, lowerJaw
+    name.match(/(left|right)\s/i)
+  ) {
+    // "Left Thigh", "Right Hand"
+    return true;
+  }
+
+  return false;
+}
+
 var usedAssets = getUsedAssets();
 var installedProducts = getInstalledProducts();
 
@@ -21,43 +332,85 @@ function createListing() {
     return;
   }
 
+  print("Found " + usedAssets.length + " used assets");
+  print("Found " + installedProducts.length + " installed products");
+  print("Starting smart matching process...");
+
+  // Use the new smart matching logic
+  var matchResults = findProductMatches(usedAssets, installedProducts);
+
+  print("Matched " + matchResults.matches.length + " assets to products");
+  print("Unmatched assets: " + matchResults.unmatched.length);
+
   var output = [];
   output.push("=== DAZ STUDIO LICENSING SUMMARY ===");
   output.push("Generated: " + new Date().toLocaleString());
-  //file.writeLine("Scene: " + Scene.getFilename());
   output.push("");
   output.push("PRODUCTS REQUIRING LICENSING REVIEW:");
   output.push("");
 
-  // Create a map of product names to their details
-  var productMap = {};
-  for (var i = 0; i < installedProducts.length; i++) {
-    var product = installedProducts[i];
-    productMap[product.name] = product;
+  // Process matched assets
+  var productCounts = {};
+  for (var i = 0; i < matchResults.matches.length; i++) {
+    var match = matchResults.matches[i];
+    var productKey = match.product.name;
+
+    if (!productCounts[productKey]) {
+      productCounts[productKey] = {
+        product: match.product,
+        assets: [],
+        methods: [],
+      };
+    }
+
+    productCounts[productKey].assets.push(match.asset);
+    if (productCounts[productKey].methods.indexOf(match.method) === -1) {
+      productCounts[productKey].methods.push(match.method);
+    }
   }
 
-  // Check each used asset against installed products
-  for (var j = 0; j < usedAssets.length; j++) {
-    var asset = usedAssets[j];
-    var product = productMap[asset.technicalName];
+  // Write matched products
+  for (var productKey in productCounts) {
+    var productInfo = productCounts[productKey];
+    var product = productInfo.product;
 
-    if (product) {
-      output.push(
-        "- " +
-          asset.name +
-          " (" +
-          asset.technicalName +
-          ") - Product: " +
-          product.name
-      );
-      output.push("  Details: " + product.details);
-      output.push("  Version: " + product.version);
-      output.push("");
-    } else {
-      output.push(
-        "- " + asset.name + " (" + asset.technicalName + ") - No product found"
-      );
-      output.push("");
+    output.push("PRODUCT: " + product.name);
+    output.push("  SKU: " + product.sku);
+    output.push("  Artist: " + product.artist);
+    output.push("  Version: " + product.version);
+    output.push("  Matching Method(s): " + productInfo.methods.join(", "));
+    output.push("  Used Assets:");
+
+    for (var j = 0; j < productInfo.assets.length; j++) {
+      var asset = productInfo.assets[j];
+      output.push("    - " + asset.name + " (" + asset.technicalName + ")");
+    }
+    output.push("");
+  }
+
+  // Write unmatched assets that might need attention
+  if (matchResults.unmatched.length > 0) {
+    output.push("=== UNMATCHED ASSETS (May need manual review) ===");
+    output.push("");
+
+    for (var k = 0; k < matchResults.unmatched.length; k++) {
+      var unmatched = matchResults.unmatched[k];
+      // Only show interesting unmatched assets (not basic bones/morphs)
+      if (
+        unmatched.type === "Node" ||
+        (unmatched.type === "Morph" &&
+          unmatched.name.toLowerCase().indexOf("shape") !== -1) ||
+        unmatched.name.toLowerCase().indexOf("morph") !== -1
+      ) {
+        output.push(
+          "- " +
+            unmatched.name +
+            " (" +
+            unmatched.technicalName +
+            ") - Type: " +
+            unmatched.type
+        );
+      }
     }
   }
 
@@ -68,9 +421,19 @@ function createListing() {
   if (file.open(DzFile.WriteOnly | DzFile.Text)) {
     file.write(output.join("\n"));
     file.close();
-    print("Licensing report generated at: " + filePath);
+    print("SUCCESS: Licensing report generated at: " + filePath);
+    print(
+      "Found licensing requirements for " +
+        Object.keys(productCounts).length +
+        " products"
+    );
+    MessageBox.information(
+      "Licensing report generated at: " + filePath,
+      "Success",
+      ""
+    );
   } else {
-    print("Failed to write licensing report to: " + filePath);
+    print("ERROR: Failed to write licensing report to: " + filePath);
   }
 }
 

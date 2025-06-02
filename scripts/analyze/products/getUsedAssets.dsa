@@ -24,7 +24,6 @@ function getUsedAssets() {
       details: getNodeType(node),
       value: null,
     });
-    print("Processing node: " + nodeLabel + " (" + nodeName + ")");
 
     // Check for morphs on this node
     var obj = node.getObject();
@@ -49,14 +48,6 @@ function getUsedAssets() {
               details: "Value: " + value.toFixed(3),
               value: value,
             });
-            print(
-              "Found morph: " +
-                morphLabel +
-                " (" +
-                morphName +
-                ") with value: " +
-                value.toFixed(3)
-            );
           }
         }
       }

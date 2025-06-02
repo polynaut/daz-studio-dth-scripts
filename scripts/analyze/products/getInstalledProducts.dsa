@@ -3,62 +3,28 @@
 
 var dimManifestPath =
   "C:/Users/Public/Documents/DAZ 3D/InstallManager/ManifestFiles";
-var outputPath = "D:/DAZ 3D/My DAZ 3D Library/Scripts/installed_products.csv";
 
-function getInstalledProducts() {
-  print("=== DAZ Install Manager Product Lister ===");
+// MOVED: extractXMLTag function needs to be declared BEFORE parseManifestFile
+function extractXMLTag(xmlContent, tagName) {
+  try {
+    // Try both self-closing and regular tags
+    var patterns = [
+      new RegExp("<" + tagName + '\\s+VALUE="([^"]*)"/?>', "i"),
+      new RegExp("<" + tagName + "[^>]*>([^<]+)</" + tagName + ">", "i"),
+      new RegExp("<" + tagName + ">([^<]+)</" + tagName + ">", "i"),
+    ];
 
-  var products = [];
-
-  // Check if DIM manifest directory exists
-  var dimDir = new DzDir(dimManifestPath);
-  if (!dimDir.exists()) {
-    print("ERROR: DIM manifest directory not found at: " + dimManifestPath);
-    MessageBox.information(
-      "DIM manifest directory not found!\nExpected location: " +
-        dimManifestPath +
-        "\n\nPlease check your DAZ Install Manager installation.",
-      "Directory Not Found",
-      "&OK"
-    );
-    return;
-  }
-
-  print("Reading manifest files from: " + dimManifestPath);
-
-  // Get all manifest files
-  var files = dimDir.entryList(DzDir.Files);
-  var manifestCount = 0;
-
-  for (var i = 0; i < files.length; i++) {
-    var fileName = String(files[i]);
-
-    // DIM manifest files are typically .dsx files
-    if (fileName.toLowerCase().endsWith(".dsx")) {
-      var manifestPath = dimManifestPath + "/" + fileName;
-      var product = parseManifestFile(manifestPath);
-
-      if (product) {
-        products.push(product);
-        manifestCount++;
-
-        // Print progress every 100 files
-        if (manifestCount % 100 === 0) {
-          print("Processed " + manifestCount + " manifests...");
-        }
+    for (var i = 0; i < patterns.length; i++) {
+      var match = String(xmlContent).match(patterns[i]);
+      if (match && match[1]) {
+        return String(match[1]).trim();
       }
     }
+  } catch (e) {
+    // Silent fail for XML parsing errors
   }
 
-  print("Processed " + manifestCount + " manifest files");
-  print("Found " + products.length + " products");
-
-  // Sort products by name
-  products.sort(function (a, b) {
-    return a.name.localeCompare(b.name);
-  });
-
-  return products;
+  return null;
 }
 
 function parseManifestFile(manifestPath) {
@@ -106,78 +72,67 @@ function parseManifestFile(manifestPath) {
   return null;
 }
 
-function extractXMLTag(xmlContent, tagName) {
-  try {
-    // Try both self-closing and regular tags
-    var patterns = [
-      new RegExp("<" + tagName + '\\s+VALUE="([^"]*)"/?>', "i"),
-      new RegExp("<" + tagName + "[^>]*>([^<]+)</" + tagName + ">", "i"),
-      new RegExp("<" + tagName + ">([^<]+)</" + tagName + ">", "i"),
-    ];
+function getInstalledProducts() {
+  print("=== DAZ Install Manager Product Lister ===");
 
-    for (var i = 0; i < patterns.length; i++) {
-      var match = String(xmlContent).match(patterns[i]);
-      if (match && match[1]) {
-        return String(match[1]).trim();
+  var products = [];
+
+  // Check if DIM manifest directory exists
+  var dimDir = new DzDir(dimManifestPath);
+  if (!dimDir.exists()) {
+    print("ERROR: DIM manifest directory not found at: " + dimManifestPath);
+    MessageBox.information(
+      "DIM manifest directory not found!\nExpected location: " +
+        dimManifestPath +
+        "\n\nPlease check your DAZ Install Manager installation.",
+      "Directory Not Found",
+      "&OK"
+    );
+    return [];
+  }
+
+  print("Reading manifest files from: " + dimManifestPath);
+
+  // Get all manifest files
+  var files = dimDir.entryList(DzDir.Files);
+  var manifestCount = 0;
+
+  for (var i = 0; i < files.length; i++) {
+    var fileName = String(files[i]);
+
+    // DIM manifest files are typically .dsx files
+    if (fileName.toLowerCase().endsWith(".dsx")) {
+      var manifestPath = dimManifestPath + "/" + fileName;
+      var product = parseManifestFile(manifestPath);
+
+      if (product) {
+        print(
+          "Found product: " +
+            product.name +
+            " (SKU: " +
+            product.sku +
+            ", Version: " +
+            product.version +
+            ")"
+        );
+        products.push(product);
+        manifestCount++;
+
+        // Print progress every 100 files
+        if (manifestCount % 100 === 0) {
+          print("Processed " + manifestCount + " manifests...");
+        }
       }
     }
-  } catch (e) {
-    // Silent fail for XML parsing errors
   }
 
-  return null;
-}
+  print("Processed " + manifestCount + " manifest files");
+  print("Found " + products.length + " products");
 
-function writeProductList(products) {
-  try {
-    var file = new DzFile(outputPath);
+  // Sort products by name
+  products.sort(function (a, b) {
+    return a.name.localeCompare(b.name);
+  });
 
-    if (!file.open(DzFile.WriteOnly | DzFile.Truncate)) {
-      print("ERROR: Cannot write to: " + outputPath);
-      return;
-    }
-
-    // Write CSV header
-    file.writeLine(
-      "Product Name,SKU,Artist/Vendor,Version,Install Date,Product Type,Description"
-    );
-
-    // Write each product
-    for (var i = 0; i < products.length; i++) {
-      var product = products[i];
-      var line =
-        '"' +
-        escapeCSV(product.name) +
-        '",' +
-        '"' +
-        escapeCSV(product.sku) +
-        '",' +
-        '"' +
-        escapeCSV(product.artist) +
-        '",' +
-        '"' +
-        escapeCSV(product.version) +
-        '",' +
-        '"' +
-        escapeCSV(product.installDate) +
-        '",' +
-        '"' +
-        escapeCSV(product.productType) +
-        '",' +
-        '"' +
-        escapeCSV(product.description) +
-        '"';
-      file.writeLine(line);
-    }
-
-    file.close();
-    print("Product list written to: " + outputPath);
-  } catch (e) {
-    print("ERROR writing file: " + e.message);
-  }
-}
-
-function escapeCSV(str) {
-  if (!str) return "";
-  return String(str).replace(/"/g, '""');
+  return products;
 }
