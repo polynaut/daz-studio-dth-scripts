@@ -5,7 +5,7 @@ var dimManifestPath =
   "C:/Users/Public/Documents/DAZ 3D/InstallManager/ManifestFiles";
 var outputPath = "D:/DAZ 3D/My DAZ 3D Library/Scripts/installed_products.csv";
 
-function listInstalledProducts() {
+function getInstalledProducts() {
   print("=== DAZ Install Manager Product Lister ===");
 
   var products = [];
@@ -58,17 +58,7 @@ function listInstalledProducts() {
     return a.name.localeCompare(b.name);
   });
 
-  // Write to CSV
-  writeProductList(products);
-
-  MessageBox.information(
-    "Product listing complete!\nFound " +
-      products.length +
-      " installed products.\nSaved to: " +
-      outputPath,
-    "Complete",
-    "&OK"
-  );
+  return products;
 }
 
 function parseManifestFile(manifestPath) {
@@ -191,6 +181,3 @@ function escapeCSV(str) {
   if (!str) return "";
   return String(str).replace(/"/g, '""');
 }
-
-// Run the product lister
-listInstalledProducts();

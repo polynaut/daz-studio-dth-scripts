@@ -24,6 +24,7 @@ function getUsedAssets() {
       details: getNodeType(node),
       value: null,
     });
+    print("Processing node: " + nodeLabel + " (" + nodeName + ")");
 
     // Check for morphs on this node
     var obj = node.getObject();
@@ -48,6 +49,14 @@ function getUsedAssets() {
               details: "Value: " + value.toFixed(3),
               value: value,
             });
+            print(
+              "Found morph: " +
+                morphLabel +
+                " (" +
+                morphName +
+                ") with value: " +
+                value.toFixed(3)
+            );
           }
         }
       }
@@ -103,16 +112,4 @@ function getAssetsByType(assets, type) {
     }
   }
   return filtered;
-}
-
-// Helper function to get only morphs with their values
-function getUsedMorphs() {
-  var assets = getUsedAssets();
-  return getAssetsByType(assets, "Morph");
-}
-
-// Helper function to get only nodes
-function getUsedNodes() {
-  var assets = getUsedAssets();
-  return getAssetsByType(assets, "Node");
 }
