@@ -1,0 +1,118 @@
+// Simple DAZ Studio Asset Lister
+// Returns all used assets in the current scene as an array
+
+function getUsedAssets() {
+  print("=== Getting Used Assets ===");
+
+  var assetList = [];
+
+  // Get all nodes in the scene
+  var nodes = Scene.getNodeList();
+  print("Found " + nodes.length + " nodes in scene");
+
+  // Process each node
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    var nodeLabel = String(node.getLabel());
+    var nodeName = String(node.getName());
+
+    // Add the node itself
+    assetList.push({
+      type: "Node",
+      name: nodeLabel,
+      technicalName: nodeName,
+      details: getNodeType(node),
+      value: null,
+    });
+
+    // Check for morphs on this node
+    var obj = node.getObject();
+    if (obj) {
+      var numMods = obj.getNumModifiers();
+      for (var m = 0; m < numMods; m++) {
+        var modifier = obj.getModifier(m);
+
+        if (modifier && modifier.inherits("DzMorph")) {
+          var channel = modifier.getValueChannel();
+          var value = channel ? channel.getValue() : 0;
+
+          // Only include morphs that are actually being used (non-zero)
+          if (Math.abs(value) > 0.001) {
+            var morphName = String(modifier.getName());
+            var morphLabel = String(modifier.getLabel());
+
+            assetList.push({
+              type: "Morph",
+              name: morphLabel,
+              technicalName: morphName,
+              details: "Value: " + value.toFixed(3),
+              value: value,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  print("Found " + assetList.length + " used assets");
+  return assetList;
+}
+
+function getNodeType(node) {
+  var label = String(node.getLabel()).toLowerCase();
+
+  // Check node class/type first (more reliable)
+  var nodeType = String(node.className());
+
+  // Lights
+  if (nodeType.indexOf("Light") !== -1) return "Light";
+
+  // Cameras
+  if (nodeType.indexOf("Camera") !== -1) return "Camera";
+
+  // Check if it's a figure (has skeleton)
+  if (node.getSkeleton && node.getSkeleton()) {
+    if (label.match(/genesis|figure/)) return "Figure";
+    return "Rigged Item"; // Could be clothing, hair, etc. that's rigged
+  }
+
+  // Check parent relationships to infer type
+  var parent = node.getNodeParent();
+  if (parent) {
+    var parentLabel = String(parent.getLabel()).toLowerCase();
+    if (parentLabel.match(/genesis|figure/)) {
+      // This is attached to a figure, likely clothing/hair/prop
+      return "Attachment";
+    }
+  }
+
+  // Fallback to basic label checks for obvious cases
+  if (label.match(/genesis.*figure/)) return "Figure";
+  if (label.match(/palace|genital|anatomy/)) return "Anatomy";
+
+  // Default - we don't really know what it is
+  return "Unknown";
+}
+
+// Helper function to filter assets by type
+function getAssetsByType(assets, type) {
+  var filtered = [];
+  for (var i = 0; i < assets.length; i++) {
+    if (assets[i].type === type) {
+      filtered.push(assets[i]);
+    }
+  }
+  return filtered;
+}
+
+// Helper function to get only morphs with their values
+function getUsedMorphs() {
+  var assets = getUsedAssets();
+  return getAssetsByType(assets, "Morph");
+}
+
+// Helper function to get only nodes
+function getUsedNodes() {
+  var assets = getUsedAssets();
+  return getAssetsByType(assets, "Node");
+}

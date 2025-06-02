@@ -1,0 +1,196 @@
+// DAZ Install Manager Product Lister
+// Reads DIM manifest files to list all installed products
+
+var dimManifestPath =
+  "C:/Users/Public/Documents/DAZ 3D/InstallManager/ManifestFiles";
+var outputPath = "D:/DAZ 3D/My DAZ 3D Library/Scripts/installed_products.csv";
+
+function listInstalledProducts() {
+  print("=== DAZ Install Manager Product Lister ===");
+
+  var products = [];
+
+  // Check if DIM manifest directory exists
+  var dimDir = new DzDir(dimManifestPath);
+  if (!dimDir.exists()) {
+    print("ERROR: DIM manifest directory not found at: " + dimManifestPath);
+    MessageBox.information(
+      "DIM manifest directory not found!\nExpected location: " +
+        dimManifestPath +
+        "\n\nPlease check your DAZ Install Manager installation.",
+      "Directory Not Found",
+      "&OK"
+    );
+    return;
+  }
+
+  print("Reading manifest files from: " + dimManifestPath);
+
+  // Get all manifest files
+  var files = dimDir.entryList(DzDir.Files);
+  var manifestCount = 0;
+
+  for (var i = 0; i < files.length; i++) {
+    var fileName = String(files[i]);
+
+    // DIM manifest files are typically .dsx files
+    if (fileName.toLowerCase().endsWith(".dsx")) {
+      var manifestPath = dimManifestPath + "/" + fileName;
+      var product = parseManifestFile(manifestPath);
+
+      if (product) {
+        products.push(product);
+        manifestCount++;
+
+        // Print progress every 100 files
+        if (manifestCount % 100 === 0) {
+          print("Processed " + manifestCount + " manifests...");
+        }
+      }
+    }
+  }
+
+  print("Processed " + manifestCount + " manifest files");
+  print("Found " + products.length + " products");
+
+  // Sort products by name
+  products.sort(function (a, b) {
+    return a.name.localeCompare(b.name);
+  });
+
+  // Write to CSV
+  writeProductList(products);
+
+  MessageBox.information(
+    "Product listing complete!\nFound " +
+      products.length +
+      " installed products.\nSaved to: " +
+      outputPath,
+    "Complete",
+    "&OK"
+  );
+}
+
+function parseManifestFile(manifestPath) {
+  try {
+    var file = new DzFile(manifestPath);
+    if (!file.open(DzFile.ReadOnly)) {
+      return null;
+    }
+
+    // Read the entire file content
+    var content = "";
+    while (!file.eof()) {
+      content += file.readLine() + "\n";
+    }
+    file.close();
+
+    // Extract product information using XML-like parsing
+    var productName = extractXMLTag(content, "ProductName");
+    var sku =
+      extractXMLTag(content, "ProductStoreIDX") ||
+      extractXMLTag(content, "ProductID");
+    var artist = extractXMLTag(content, "ArtistName");
+    var version = extractXMLTag(content, "ProductVersion");
+    var installDate = extractXMLTag(content, "InstallDate");
+    var productType = extractXMLTag(content, "ProductType");
+    var description = extractXMLTag(content, "ProductDescription");
+
+    // Only return if we found at least a product name
+    if (productName) {
+      return {
+        name: String(productName).trim(),
+        sku: String(sku || "Unknown").trim(),
+        artist: String(artist || "Unknown").trim(),
+        version: String(version || "Unknown").trim(),
+        installDate: String(installDate || "Unknown").trim(),
+        productType: String(productType || "Unknown").trim(),
+        description: String(description || "").trim(),
+        manifestFile: manifestPath,
+      };
+    }
+  } catch (e) {
+    print("Error parsing manifest: " + manifestPath + " - " + e.message);
+  }
+
+  return null;
+}
+
+function extractXMLTag(xmlContent, tagName) {
+  try {
+    // Try both self-closing and regular tags
+    var patterns = [
+      new RegExp("<" + tagName + '\\s+VALUE="([^"]*)"/?>', "i"),
+      new RegExp("<" + tagName + "[^>]*>([^<]+)</" + tagName + ">", "i"),
+      new RegExp("<" + tagName + ">([^<]+)</" + tagName + ">", "i"),
+    ];
+
+    for (var i = 0; i < patterns.length; i++) {
+      var match = String(xmlContent).match(patterns[i]);
+      if (match && match[1]) {
+        return String(match[1]).trim();
+      }
+    }
+  } catch (e) {
+    // Silent fail for XML parsing errors
+  }
+
+  return null;
+}
+
+function writeProductList(products) {
+  try {
+    var file = new DzFile(outputPath);
+
+    if (!file.open(DzFile.WriteOnly | DzFile.Truncate)) {
+      print("ERROR: Cannot write to: " + outputPath);
+      return;
+    }
+
+    // Write CSV header
+    file.writeLine(
+      "Product Name,SKU,Artist/Vendor,Version,Install Date,Product Type,Description"
+    );
+
+    // Write each product
+    for (var i = 0; i < products.length; i++) {
+      var product = products[i];
+      var line =
+        '"' +
+        escapeCSV(product.name) +
+        '",' +
+        '"' +
+        escapeCSV(product.sku) +
+        '",' +
+        '"' +
+        escapeCSV(product.artist) +
+        '",' +
+        '"' +
+        escapeCSV(product.version) +
+        '",' +
+        '"' +
+        escapeCSV(product.installDate) +
+        '",' +
+        '"' +
+        escapeCSV(product.productType) +
+        '",' +
+        '"' +
+        escapeCSV(product.description) +
+        '"';
+      file.writeLine(line);
+    }
+
+    file.close();
+    print("Product list written to: " + outputPath);
+  } catch (e) {
+    print("ERROR writing file: " + e.message);
+  }
+}
+
+function escapeCSV(str) {
+  if (!str) return "";
+  return String(str).replace(/"/g, '""');
+}
+
+// Run the product lister
+listInstalledProducts();

@@ -1,0 +1,337 @@
+// Asset to Product Matcher
+// Matches used scene assets with installed DIM products
+
+var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
+include(dir_self.filePath("getInstalledProducts.dsa"));
+include(dir_self.filePath("getUsedAssets.dsa"));
+
+var outputPath =
+  "D:/DAZ 3D/My DAZ 3D Library/Scripts/asset_product_matches.txt";
+
+function matchAssetsToProducts() {
+  print("=== Asset to Product Matcher ===");
+
+  // Get data from both scripts
+  print("Getting used assets from scene...");
+  var usedAssets = getUsedAssets();
+
+  print("Getting installed products...");
+  var installedProducts = getAllInstalledProducts();
+
+  if (usedAssets.length === 0) {
+    print("No assets found in scene!");
+    return;
+  }
+
+  if (installedProducts.length === 0) {
+    print("No installed products found!");
+    return;
+  }
+
+  print(
+    "Matching " +
+      usedAssets.length +
+      " assets against " +
+      installedProducts.length +
+      " products..."
+  );
+
+  // Perform matching
+  var matchResults = performMatching(usedAssets, installedProducts);
+
+  // Generate report
+  generateMatchingReport(matchResults);
+
+  // Show summary
+  showMatchingSummary(matchResults);
+}
+
+function performMatching(usedAssets, installedProducts) {
+  var matchedAssets = [];
+  var unmatchedAssets = [];
+
+  for (var i = 0; i < usedAssets.length; i++) {
+    var asset = usedAssets[i];
+    var matches = findMatchingProducts(asset, installedProducts);
+
+    if (matches.length > 0) {
+      matchedAssets.push({
+        asset: asset,
+        matches: matches,
+        bestMatch: selectBestMatch(matches, asset),
+      });
+    } else {
+      unmatchedAssets.push(asset);
+    }
+  }
+
+  return {
+    matched: matchedAssets,
+    unmatched: unmatchedAssets,
+    totalAssets: usedAssets.length,
+    totalProducts: installedProducts.length,
+  };
+}
+
+function findMatchingProducts(asset, installedProducts) {
+  var matches = [];
+  var assetName = String(asset.name).toLowerCase();
+  var assetTechName = String(asset.technicalName).toLowerCase();
+
+  for (var i = 0; i < installedProducts.length; i++) {
+    var product = installedProducts[i];
+    var productName = String(product.name).toLowerCase();
+
+    var confidence = calculateMatchConfidence(asset, product);
+
+    if (confidence > 0) {
+      matches.push({
+        product: product,
+        confidence: confidence,
+        matchReason: getMatchReason(asset, product, confidence),
+      });
+    }
+  }
+
+  // Sort by confidence (highest first)
+  matches.sort(function (a, b) {
+    return b.confidence - a.confidence;
+  });
+
+  return matches;
+}
+
+function calculateMatchConfidence(asset, product) {
+  var assetName = String(asset.name).toLowerCase();
+  var assetTechName = String(asset.technicalName).toLowerCase();
+  var productName = String(product.name).toLowerCase();
+  var artistName = String(product.artist).toLowerCase();
+
+  var confidence = 0;
+
+  // Exact name match (very high confidence)
+  if (assetName === productName) {
+    confidence += 90;
+  }
+  // Partial name matches
+  else if (
+    productName.indexOf(assetName) !== -1 ||
+    assetName.indexOf(productName) !== -1
+  ) {
+    confidence += 70;
+  }
+  // Technical name matches
+  else if (
+    productName.indexOf(assetTechName) !== -1 ||
+    assetTechName.indexOf(productName) !== -1
+  ) {
+    confidence += 60;
+  }
+
+  // Look for key terms in product name that match asset
+  var assetWords = assetName.split(/[\s\-_]+/);
+  var productWords = productName.split(/[\s\-_]+/);
+
+  var wordMatches = 0;
+  for (var i = 0; i < assetWords.length; i++) {
+    if (assetWords[i].length > 2) {
+      // Skip very short words
+      for (var j = 0; j < productWords.length; j++) {
+        if (assetWords[i] === productWords[j]) {
+          wordMatches++;
+          confidence += 10;
+        }
+      }
+    }
+  }
+
+  // Special case for Genesis figures
+  if (
+    assetName.indexOf("genesis") !== -1 &&
+    productName.indexOf("genesis") !== -1
+  ) {
+    confidence += 30;
+  }
+
+  // Bonus for known morph prefixes
+  if (asset.type === "Morph") {
+    if (
+      assetTechName.match(/^(pbm|phm|fbm|ctrl)/i) &&
+      productName.indexOf("morph") !== -1
+    ) {
+      confidence += 20;
+    }
+  }
+
+  return Math.min(confidence, 100); // Cap at 100
+}
+
+function getMatchReason(asset, product, confidence) {
+  if (confidence >= 90) return "Exact name match";
+  if (confidence >= 70) return "Strong partial name match";
+  if (confidence >= 60) return "Technical name match";
+  if (confidence >= 40) return "Multiple word matches";
+  if (confidence >= 20) return "Partial word matches";
+  return "Weak match";
+}
+
+function selectBestMatch(matches, asset) {
+  if (matches.length === 0) return null;
+
+  // Return the highest confidence match
+  return matches[0];
+}
+
+function generateMatchingReport(matchResults) {
+  try {
+    var file = new DzFile(outputPath);
+
+    if (!file.open(DzFile.WriteOnly | DzFile.Truncate)) {
+      print("ERROR: Cannot write to: " + outputPath);
+      return;
+    }
+
+    // Write header
+    file.writeLine("=== ASSET TO PRODUCT MATCHING REPORT ===");
+    file.writeLine("Generated: " + new Date().toString());
+    file.writeLine("Scene: " + Scene.getFilename());
+    file.writeLine("");
+    file.writeLine("SUMMARY:");
+    file.writeLine("- Total assets analyzed: " + matchResults.totalAssets);
+    file.writeLine("- Assets with matches: " + matchResults.matched.length);
+    file.writeLine(
+      "- Assets without matches: " + matchResults.unmatched.length
+    );
+    file.writeLine(
+      "- Match rate: " +
+        (
+          (matchResults.matched.length / matchResults.totalAssets) *
+          100
+        ).toFixed(1) +
+        "%"
+    );
+    file.writeLine("");
+
+    // Write matched assets
+    file.writeLine("MATCHED ASSETS:");
+    file.writeLine("==============");
+
+    for (var i = 0; i < matchResults.matched.length; i++) {
+      var match = matchResults.matched[i];
+      var asset = match.asset;
+      var bestMatch = match.bestMatch;
+
+      file.writeLine("");
+      file.writeLine("Asset: " + asset.name + " (" + asset.type + ")");
+      file.writeLine("  Technical Name: " + asset.technicalName);
+      if (asset.value !== null) {
+        file.writeLine("  Value: " + asset.value);
+      }
+      file.writeLine("  Best Match: " + bestMatch.product.name);
+      file.writeLine("  Vendor: " + bestMatch.product.artist);
+      file.writeLine("  SKU: " + bestMatch.product.sku);
+      file.writeLine(
+        "  Confidence: " +
+          bestMatch.confidence +
+          "% (" +
+          bestMatch.matchReason +
+          ")"
+      );
+
+      if (match.matches.length > 1) {
+        file.writeLine("  Other possible matches:");
+        for (var j = 1; j < Math.min(match.matches.length, 4); j++) {
+          // Show up to 3 alternatives
+          var altMatch = match.matches[j];
+          file.writeLine(
+            "    - " + altMatch.product.name + " (" + altMatch.confidence + "%)"
+          );
+        }
+      }
+    }
+
+    // Write unmatched assets
+    file.writeLine("");
+    file.writeLine("");
+    file.writeLine("UNMATCHED ASSETS:");
+    file.writeLine("=================");
+
+    for (var i = 0; i < matchResults.unmatched.length; i++) {
+      var asset = matchResults.unmatched[i];
+      file.writeLine("");
+      file.writeLine("Asset: " + asset.name + " (" + asset.type + ")");
+      file.writeLine("  Technical Name: " + asset.technicalName);
+      if (asset.value !== null) {
+        file.writeLine("  Value: " + asset.value);
+      }
+      file.writeLine("  Status: No matching products found");
+    }
+
+    file.close();
+    print("Matching report written to: " + outputPath);
+  } catch (e) {
+    print("ERROR writing report: " + e.message);
+  }
+}
+
+function showMatchingSummary(matchResults) {
+  var matchRate = (
+    (matchResults.matched.length / matchResults.totalAssets) *
+    100
+  ).toFixed(1);
+
+  print("\n=== MATCHING SUMMARY ===");
+  print("Total assets: " + matchResults.totalAssets);
+  print("Matched assets: " + matchResults.matched.length);
+  print("Unmatched assets: " + matchResults.unmatched.length);
+  print("Match rate: " + matchRate + "%");
+
+  if (matchResults.matched.length > 0) {
+    print("\nTop matches:");
+    for (var i = 0; i < Math.min(matchResults.matched.length, 5); i++) {
+      var match = matchResults.matched[i];
+      print(
+        "- " +
+          match.asset.name +
+          " → " +
+          match.bestMatch.product.name +
+          " (" +
+          match.bestMatch.confidence +
+          "%)"
+      );
+    }
+  }
+
+  if (matchResults.unmatched.length > 0) {
+    print("\nSome unmatched assets:");
+    for (var i = 0; i < Math.min(matchResults.unmatched.length, 5); i++) {
+      print(
+        "- " +
+          matchResults.unmatched[i].name +
+          " (" +
+          matchResults.unmatched[i].type +
+          ")"
+      );
+    }
+  }
+
+  MessageBox.information(
+    "Asset matching complete!\n\n" +
+      "Match rate: " +
+      matchRate +
+      "%\n" +
+      "Matched: " +
+      matchResults.matched.length +
+      " assets\n" +
+      "Unmatched: " +
+      matchResults.unmatched.length +
+      " assets\n\n" +
+      "Detailed report saved to:\n" +
+      outputPath,
+    "Matching Complete",
+    "&OK"
+  );
+}
+
+// Run the matcher
+matchAssetsToProducts();
