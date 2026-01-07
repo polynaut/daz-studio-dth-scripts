@@ -136,7 +136,14 @@ function getFBMControlConfig() {
     { type: "morph", name: "Arms Muscular", value: 1 },
     { type: "morph", name: "Thigh Muscular", value: 1 },
     { type: "morph", name: "5 Belly Shape Muscular", value: 1 },
+    { type: "morph", name: "5 PEAR SHAPE FULL", value: 1 },
+    { type: "morph", name: "FBMVoluptuous", value: 1 },
+    { type: "morph", name: "CtrlCartoon Pear Body Shape", value: 1 },
+    { type: "morph", name: "Shape Width Adjust", value: 1 },
 
+    
+    { type: "morph", name: "PBMBreastsDiameter", value: 1 },
+    { type: "morph", name: "CTRLBreastsImplants", value: 1 },
     { type: "morph", name: "PBMBreastsPerkSide", value: 1 },
     { type: "morph", name: "PBMBreastsCleavage", value: 1 },
     { type: "morph", name: "PBMBreastsCleavage", value: -1 },
@@ -145,6 +152,7 @@ function getFBMControlConfig() {
       { type: "morph", name: "PBMBreastsNaturalL", value: 0, reset: -0.6 },
       { type: "morph", name: "PBMBreastsNaturalR", value: 0, reset: -0.6 },
     ],
+    { type: "morph", name: "Breast Preset 01", value: 1 },
     { type: "morph", name: "Breast Preset 10", value: 1 },
     { type: "morph", name: "PBMBreastsSize", value: 1 },
     { type: "morph", name: "!Breast Large", value: 1 },
@@ -174,6 +182,7 @@ function getFBMControlConfig() {
     { type: "morph", name: "PBMGlutesWidth", value: 1 },
     { type: "morph", name: "Glute Inner Close", value: 1 },
     { type: "morph", name: "Glute Height Inner", value: 1 },
+    { type: "morph", name: "Glute Width", value: 1 },
     { type: "morph", name: "Glute Width Upper", value: 1 },
     { type: "morph", name: "Glute Width Lower", value: 1 },
 

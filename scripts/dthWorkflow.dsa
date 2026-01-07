@@ -12,8 +12,8 @@ include(dir_self.filePath("morphAnimationConfigs/laraG81.dsa"));
 
 var options = {
   // Path to your daz studio library, always use "/" as the path separator, on mac and windows
-  sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
-  sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
+  sPathDazLibrary: "D:/DAZ 3D/Applications/Data/DAZ 3D/My DAZ 3D Library/",
+  sPathCustomDthPoseAssets: "D:/DAZ 3D/Applications/Data/DAZ 3D/My DAZ 3D Library//MyDazToHue/Poses/",
   genesisVersion: 8.1, // 8.1 or 9
   bIncludeFAC: true, // Set true to include the FAC version of the JCM ROM
 
