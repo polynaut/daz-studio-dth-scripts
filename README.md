@@ -11,7 +11,7 @@ A collection of scripts for Daz Studio and DTH
 Easiest way is to clone the entire repository in the `Scripts` folder of your Daz3D installation.
 
 - Locate your `My DAZ 3D Library` folder on hour harddrive, in my case it is `D:\DAZ 3D\My DAZ 3D Library`
-- Within thid folder, you will find a `Scripts` subfolder.
+- Within this folder, you will find a `Scripts` subfolder.
 - Now open a terminal of your liking, navigate to this folder `D:\DAZ 3D\My DAZ 3D Library\Scripts` and execute `git clone git@github.com:polynaut/daz-studio-dth-scripts.git`, this will create copy of the entire repository in your scripts folder
 - Start Daz3D Studio (or restart it), and you will find all the scripts in your `Content Library`
 
