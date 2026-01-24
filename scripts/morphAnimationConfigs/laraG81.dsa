@@ -136,31 +136,32 @@ function getFBMControlConfig() {
     { type: "morph", name: "Arms Muscular", value: 1 },
     { type: "morph", name: "Thigh Muscular", value: 1 },
     { type: "morph", name: "5 Belly Shape Muscular", value: 1 },
-    { type: "morph", name: "5 PEAR SHAPE FULL", value: 1 },
-    { type: "morph", name: "FBMVoluptuous", value: 1 },
-    { type: "morph", name: "CtrlCartoon Pear Body Shape", value: 1 },
-    { type: "morph", name: "Shape Width Adjust", value: 1 },
-
+    { type: "morph", name: "5 PEAR SHAPE FULL", value: 1 }, // new
+    { type: "morph", name: "FBMVoluptuous", value: 1 }, // new
+    { type: "morph", name: "CtrlCartoon Pear Body Shape", value: 1 }, // new
+    { type: "morph", name: "CTRLCartoon Rectangle/HourGlass Body Shape", value: -1 }, // 🚨
+    { type: "morph", name: "Shoulder Width", value: -1 }, // 🚨
+    { type: "morph", name: "Shape Width Adjust", value: 1 }, // new
     
-    { type: "morph", name: "PBMBreastsDiameter", value: 1 },
-    { type: "morph", name: "CTRLBreastsImplants", value: 1 },
+    { type: "morph", name: "PBMBreastsDiameter", value: 1 }, // new
+    { type: "morph", name: "CTRLBreastsImplants", value: 1 }, // new
     { type: "morph", name: "PBMBreastsPerkSide", value: 1 },
     { type: "morph", name: "PBMBreastsCleavage", value: 1 },
     { type: "morph", name: "PBMBreastsCleavage", value: -1 },
     { type: "morph", name: "PBMBreastsHeavy", value: 1 },
-    [
-      { type: "morph", name: "PBMBreastsNaturalL", value: 0, reset: -0.6 },
-      { type: "morph", name: "PBMBreastsNaturalR", value: 0, reset: -0.6 },
-    ],
-    { type: "morph", name: "Breast Preset 01", value: 1 },
+    { type: "morph", name: "CTRLBreastsNatural", value: 1 }, // new❤️
+    { type: "morph", name: "BL_Natural_05", value: 1 }, // new❤️
+    { type: "morph", name: "Breast Preset 01", value: 1 }, // new
     { type: "morph", name: "Breast Preset 10", value: 1 },
     { type: "morph", name: "PBMBreastsSize", value: 1 },
     { type: "morph", name: "!Breast Large", value: 1 },
-
+    { type: "morph", name: "!Breast Under Weight", value: -0.5 }, // new
+    
+    { type: "pose", name: "Areola UpDown", value: 1 }, // new
     { type: "morph", name: "PBMAreolaeDiameter", value: 1 },
     { type: "morph", name: "Areola Size", value: 1 },
     { type: "morph", name: "PBMNipplesSize", value: 1 },
-    { type: "morph", name: "PBMNipplesLarge", value: 1 },
+    { type: "morph", name: "PBMNipplesLarge", value: 1 }, // 😶‍🌫️
     { type: "morph", name: "Nipples Apply", value: 1 },
     { type: "morph", name: "Nipples Inflate", value: 1 },
     { type: "morph", name: "Nipples Tip Adjust", value: 1 },
@@ -171,6 +172,10 @@ function getFBMControlConfig() {
     { type: "morph", name: "Shape NAVEL DEEP FOR PEAR", value: 1 },
 
     { type: "morph", name: "PBMHipSize", value: 1 },
+    { type: "morph", name: "PBMWaistWidth", value: -1 }, // 🚨
+    { type: "morph", name: "Waist Height", value: 1 }, // 🚨
+    { type: "morph", name: "Waist Rotate", value: -1 }, // 🚨
+    { type: "morph", name: "Waist Shape", value: -1 }, // 🚨
 
     { type: "morph", name: "Shape THIGHS BIG", value: 1 },
     { type: "morph", name: "PBMThighsSize", value: 1 },
@@ -182,7 +187,7 @@ function getFBMControlConfig() {
     { type: "morph", name: "PBMGlutesWidth", value: 1 },
     { type: "morph", name: "Glute Inner Close", value: 1 },
     { type: "morph", name: "Glute Height Inner", value: 1 },
-    { type: "morph", name: "Glute Width", value: 1 },
+    { type: "morph", name: "Glute Width", value: 1 }, // new
     { type: "morph", name: "Glute Width Upper", value: 1 },
     { type: "morph", name: "Glute Width Lower", value: 1 },
 
@@ -218,15 +223,16 @@ function getFBMControlConfig() {
     ],
 
     // Breast gravity morph
-    [
+    { type: "morph", name: "Breasts Gravity 1", value: 1 }, // called depth adjust..
+    /*[
       { type: "morph", name: "!Center Shift", value: 0.37 },
       { type: "pose", name: "1 Move UpDown", value: -0.05 },
       { type: "pose", name: "1 Rotate UpDown", value: -0.2 },
       { type: "pose", name: "3 Depth Adjust", value: 1 },
       { type: "morph", name: "BL_Gravity_Pointy", value: 0.6 },
-    ],
+    ],*/
     { type: "pose", name: "!TogetherApart", value: 1 },
     { type: "morph", name: "BL_Gravity", value: 0.13 },
-    { type: "morph", name: "BL_Gravity_Deflate", value: 0.14 },
+    { type: "morph", name: "BL_Gravity_Deflate", value: 0.14 }
   ];
 }
