@@ -4,7 +4,7 @@ A collection of scripts for Daz Studio and DTH
 
 > Open the script with an editor of your choice: Notepad++, VSCcode or just any text editor you find on your machine. What can help too is the Daz Studio `Script IDE` (Windows -> Panes -> Script IDE).
 
-> VSCode users can add a new entry in `file associations` for `\*.dsa` files with the language `javascript` to get syntax highlighting.
+> VSCode users can add a new entry in `file associations` for `*.dsa` files with the language `javascript` to get syntax highlighting.
 
 ## Setup
 

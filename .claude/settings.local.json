@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(xargs:*)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(git -C \"D:\\\\Development\\\\daz-studio-dth-scripts\" log --oneline -10)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm tsx:*)",
+      "Bash(pnpm sync:dry:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm run uninstall-daz:dry:*)",
+      "Bash(cmd /c \"dir /s /b /ad D:\\\\*Morphs 2>nul | findstr /i \"\"data\\\\Daz 3D\\\\Genesis 9\\\\Base\\\\Morphs\"\"\")",
+      "Bash(cmd /c \"dir /s /b /ad C:\\\\*Morphs 2>nul | findstr /i \"\"Daz 3D\\\\Genesis 9\\\\Base\\\\Morphs\"\"\")",
+      "Bash(cmd /c \"dir /s /b /ad D:\\\\*Morphs 2>nul | findstr /i \"\"Genesis 9\"\"\")",
+      "Bash(cmd /c \"dir /s /b /ad D:\\\\*Base* 2>nul | findstr /i \"\"Genesis 9\"\"\")",
+      "Bash(cmd /c \"dir /s /b /ad \"\"D:\\\\*Genesis 9*\"\" 2>nul\")",
+      "Bash(cmd /c \"where /r D:\\\\ \"\"Genesis 8 Female Body.dsf\"\" 2>nul\")",
+      "Bash(cmd /c \"where /r C:\\\\ \"\"Genesis 8 Female Body.dsf\"\" 2>nul\")",
+      "Bash(cmd /c \"wmic logicaldisk get name\")",
+      "Bash(cmd /c \"fsutil fsinfo drives\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-genesis.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-charconv.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-vendor.ps1\")"
+    ]
+  }
+}

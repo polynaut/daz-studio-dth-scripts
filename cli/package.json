@@ -1,0 +1,26 @@
+{
+  "name": "dth-scripts-cli",
+  "version": "1.0.0",
+  "description": "CLI for syncing DTH Scripts to DAZ Studio",
+  "type": "module",
+  "scripts": {
+    "sync": "tsx src/index.ts",
+    "sync:dry": "tsx src/index.ts --dry-run",
+    "list-assets": "tsx src/index.ts list-assets",
+    "list-assets:g3": "tsx src/index.ts list-assets --gen 3",
+    "list-assets:g8": "tsx src/index.ts list-assets --gen 8",
+    "list-assets:g9": "tsx src/index.ts list-assets --gen 9",
+    "uninstall-daz": "tsx src/index.ts uninstall-daz",
+    "uninstall-daz:dry": "tsx src/index.ts uninstall-daz --dry-run"
+  },
+  "dependencies": {
+    "args": "^5.0.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/args": "^5.0.3",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
