@@ -27,3 +27,17 @@ export interface IListAssetsConfig {
   assetSources: IAssetSource[];
   debug: boolean;
 }
+
+export interface IInstallAssetsConfig {
+  assetSources: IAssetSource[];
+  dazLibFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}
+
+export interface IInstallDthConfig {
+  dthReleasesFolder: string;
+  dazLibFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}

@@ -18,7 +18,7 @@ interface UninstallOptions {
 
 function getDazFolders(): string[] {
   const appData = process.env.APPDATA || "";
-  const myDazLibFolder = process.env.MY_DAZ_LIB_FOLDER;
+  const myDazLibFolder = process.env.UNINSTALL_MY_DAZ_LIB_FOLDER;
 
   const folders: string[] = [];
 
@@ -114,5 +114,5 @@ export async function uninstallDaz(options: UninstallOptions): Promise<void> {
   log("\nCleanup complete!");
   log("");
   logSuccess("Now get DAZ Install Manager again and before installing anything with it,");
-  logSuccess(`add "${process.env.MY_DAZ_LIB_FOLDER}" as a custom My DAZ Library folder in the settings.`);
+  logSuccess(`add "${process.env.UNINSTALL_MY_DAZ_LIB_FOLDER}" as a custom My DAZ Library folder in the settings.`);
 }

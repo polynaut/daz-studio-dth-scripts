@@ -11,7 +11,12 @@
     "list-assets:g8": "tsx src/index.ts list-assets --gen 8",
     "list-assets:g9": "tsx src/index.ts list-assets --gen 9",
     "uninstall-daz": "tsx src/index.ts uninstall-daz",
-    "uninstall-daz:dry": "tsx src/index.ts uninstall-daz --dry-run"
+    "uninstall-daz:dry": "tsx src/index.ts uninstall-daz --dry-run",
+    "install-assets": "tsx src/index.ts install-assets",
+    "install-assets:dry": "tsx src/index.ts install-assets --dry-run",
+    "install-assets:g9": "tsx src/index.ts install-assets --gen 9",
+    "install-dth": "tsx src/index.ts install-dth",
+    "install-dth:dry": "tsx src/index.ts install-dth --dry-run"
   },
   "dependencies": {
     "args": "^5.0.3",

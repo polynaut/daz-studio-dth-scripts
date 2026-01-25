@@ -3,9 +3,9 @@ import * as path from "path";
 import type { IAssetInfo, IListAssetsConfig } from "../../common/types.js";
 import { log, logDebug } from "../../common/utils.js";
 
-const SPECIAL_FOLDERS = ["data", "Documentation", "People", "Runtime"];
+export const SPECIAL_FOLDERS = ["data", "Documentation", "People", "Runtime"];
 
-function findContentLevel(
+export function findContentLevel(
   dir: string,
   debug: boolean,
   relativePath: string = "."
@@ -40,7 +40,7 @@ function findContentLevel(
   return null;
 }
 
-function scanAssetsDir(
+export function scanAssetsDir(
   assetsDir: string,
   debug: boolean
 ): IAssetInfo[] {

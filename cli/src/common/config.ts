@@ -1,5 +1,5 @@
 import { config as loadEnv } from "dotenv";
-import type { IConfig, IListAssetsConfig, IOptions } from "./types.js";
+import type { IConfig, IInstallAssetsConfig, IInstallDthConfig, IListAssetsConfig, IOptions } from "./types.js";
 
 loadEnv();
 
@@ -59,5 +59,47 @@ export function getListAssetsConfig(options: IOptions): IListAssetsConfig {
   return {
     assetSources,
     debug: options.debug ?? false,
+  };
+}
+
+export function getInstallAssetsConfig(options: IOptions): IInstallAssetsConfig {
+  const listConfig = getListAssetsConfig(options);
+  const dazLibFolder = options.out || process.env.DAZ_LIB_FOLDER;
+
+  if (!dazLibFolder) {
+    throw new Error(
+      "DAZ_LIB_FOLDER not set. Provide --out option or set DAZ_LIB_FOLDER in .env file."
+    );
+  }
+
+  return {
+    assetSources: listConfig.assetSources,
+    dazLibFolder,
+    debug: listConfig.debug,
+    dryRun: options.dryRun ?? false,
+  };
+}
+
+export function getInstallDthConfig(options: IOptions): IInstallDthConfig {
+  const dthReleasesFolder = process.env.DTH_RELEASES_FOLDER;
+  const dazLibFolder = options.out || process.env.DAZ_LIB_FOLDER;
+
+  if (!dthReleasesFolder) {
+    throw new Error(
+      "DTH_RELEASES_FOLDER not set. Set DTH_RELEASES_FOLDER in .env file."
+    );
+  }
+
+  if (!dazLibFolder) {
+    throw new Error(
+      "DAZ_LIB_FOLDER not set. Provide --out option or set DAZ_LIB_FOLDER in .env file."
+    );
+  }
+
+  return {
+    dthReleasesFolder,
+    dazLibFolder,
+    debug: options.debug ?? false,
+    dryRun: options.dryRun ?? false,
   };
 }

@@ -1,9 +1,11 @@
 import args from "args";
-import { getConfig, getListAssetsConfig } from "./common/config.js";
+import { getConfig, getInstallAssetsConfig, getInstallDthConfig, getListAssetsConfig } from "./common/config.js";
 import { logError } from "./common/utils.js";
 import { syncScripts } from "./commands/sync/sync.js";
 import { listAssets } from "./commands/listAssets/listAssets.js";
 import { uninstallDaz } from "./commands/uninstallDaz/uninstallDaz.js";
+import { installAssets } from "./commands/installAssets/installAssets.js";
+import { installDth } from "./commands/installDth/installDth.js";
 import type { IOptions } from "./common/types.js";
 
 args
@@ -23,6 +25,12 @@ async function run() {
       await listAssets(config);
     } else if (command === "uninstall-daz") {
       await uninstallDaz({ dryRun: flags.dryRun ?? false });
+    } else if (command === "install-assets") {
+      const config = getInstallAssetsConfig(flags);
+      await installAssets(config);
+    } else if (command === "install-dth") {
+      const config = getInstallDthConfig(flags);
+      await installDth(config);
     } else {
       const config = getConfig(flags);
       await syncScripts(config);
