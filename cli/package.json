@@ -19,10 +19,12 @@
     "install-dth:dry": "tsx src/index.ts install-dth --dry-run"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "args": "^5.0.3",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.6",
     "@types/args": "^5.0.3",
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",

@@ -30,7 +30,9 @@
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-vendor.ps1\")",
       "Bash(pnpm install-dth:dry:*)",
       "Bash(npm run install-assets:dry:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run list-assets:*)"
     ]
   }
 }

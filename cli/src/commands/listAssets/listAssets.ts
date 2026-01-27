@@ -1,5 +1,7 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import AdmZip from "adm-zip";
 import type { IAssetInfo, IListAssetsConfig } from "../../common/types.js";
 import { log, logDebug } from "../../common/utils.js";
 
@@ -40,12 +42,47 @@ export function findContentLevel(
   return null;
 }
 
+export function scanZipAsset(
+  zipPath: string,
+  debug: boolean
+): IAssetInfo | null {
+  const zipName = path.basename(zipPath, ".zip");
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "daz-asset-"));
+
+  try {
+    const zip = new AdmZip(zipPath);
+    zip.extractAllTo(tempDir, true);
+
+    const result = findContentLevel(tempDir, debug);
+
+    if (result) {
+      return {
+        assetName: zipName,
+        contentPath: path.join(tempDir, result.contentPath),
+        foundFolders: result.foundFolders,
+        isTemp: true,
+        tempDir,
+      };
+    }
+
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    return null;
+  } catch (err) {
+    logDebug(`Failed to extract ${zipPath}: ${err}`, debug);
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    return null;
+  }
+}
+
 export function scanAssetsDir(
   assetsDir: string,
   debug: boolean
 ): IAssetInfo[] {
   const entries = fs.readdirSync(assetsDir, { withFileTypes: true });
   const assetDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+  const zipFiles = entries
+    .filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".zip"))
+    .map((e) => e.name);
 
   const assets: IAssetInfo[] = [];
 
@@ -67,6 +104,23 @@ export function scanAssetsDir(
       assets.push({
         assetName,
         contentPath: "(no content found)",
+        foundFolders: [],
+      });
+    }
+  }
+
+  for (const zipName of zipFiles) {
+    const zipPath = path.join(assetsDir, zipName);
+
+    logDebug(`\nScanning ZIP: ${zipName}`, debug);
+
+    const asset = scanZipAsset(zipPath, debug);
+    if (asset) {
+      assets.push(asset);
+    } else {
+      assets.push({
+        assetName: path.basename(zipName, ".zip"),
+        contentPath: "(no content found in ZIP)",
         foundFolders: [],
       });
     }

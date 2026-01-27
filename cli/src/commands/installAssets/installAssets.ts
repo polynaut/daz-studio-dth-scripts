@@ -22,6 +22,14 @@ function countFiles(dir: string): number {
   return count;
 }
 
+function cleanupTempAssets(assets: IAssetInfo[]): void {
+  for (const asset of assets) {
+    if (asset.isTemp && asset.tempDir) {
+      fs.rmSync(asset.tempDir, { recursive: true, force: true });
+    }
+  }
+}
+
 function copyFolder(
   srcFolder: string,
   destFolder: string,
@@ -96,6 +104,8 @@ export async function installAssets(config: IInstallAssetsConfig): Promise<void>
 
     log("");
   }
+
+  cleanupTempAssets(allAssets);
 
   if (dryRun) {
     log(`=== DRY RUN COMPLETE ===`);

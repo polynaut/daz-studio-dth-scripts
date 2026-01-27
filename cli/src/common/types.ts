@@ -16,6 +16,8 @@ export interface IAssetInfo {
   assetName: string;
   contentPath: string;
   foundFolders: string[];
+  isTemp?: boolean;
+  tempDir?: string;
 }
 
 export interface IAssetSource {
