@@ -83,6 +83,9 @@ export function getInstallAssetsConfig(options: IOptions): IInstallAssetsConfig 
 export function getInstallDthConfig(options: IOptions): IInstallDthConfig {
   const dthReleasesFolder = process.env.DTH_RELEASES_FOLDER;
   const dazLibFolder = options.out || process.env.DAZ_LIB_FOLDER;
+  const dazPluginsFolder =
+    process.env.DAZ_PLUGINS_FOLDER ||
+    "C:/Program Files/DAZ 3D/DAZStudio4/plugins";
 
   if (!dthReleasesFolder) {
     throw new Error(
@@ -99,6 +102,7 @@ export function getInstallDthConfig(options: IOptions): IInstallDthConfig {
   return {
     dthReleasesFolder,
     dazLibFolder,
+    dazPluginsFolder,
     debug: options.debug ?? false,
     dryRun: options.dryRun ?? false,
   };

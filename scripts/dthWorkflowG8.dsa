@@ -118,12 +118,6 @@ function applyDTHWorkflow(options) {
     // We can generate the animation
     // -> downside, it's slow but the user is not asked to extend the timeline again
     addMorphAnimationFrames(oNodeGP, getGENControlConfig());
-
-    // Or we can simply apply an existing pose asset with the full animation
-    // -> downside, this will ask the user again to "extend the timeline with x frames", but it's much faster
-    /*addFramesToAnim();
-    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);*/
   }
 
   /** PHY      *****************************************************/

@@ -3,24 +3,28 @@ function applyDefaultROMs(options, oNodeRoot, oNodeMouth) {
   var sJcmROM = ROMs.sJcmROM;
   var sMouthROM = ROMs.sMouthROM;
 
-  print("Loading JCM ROM: ", sJcmROM);
-  if (loadPreset(sJcmROM, oNodeRoot)) {
-    print("Successfully loaded pose preset.");
+  // Set total frames before loading preset (DQS: ~328, LINEAR: ~617)
+  var baseFrameCount = options["bDQS"] ? 328 : 617;
+  setTotalFrames(baseFrameCount);
 
-    if (options["bIncludeFAC"] && options.genesisVersion === 9) {
-      print("Loading Mouth ROM: ", sMouthROM);
-      if (loadPreset(sMouthROM, oNodeMouth)) {
-        print("Successfully loaded pose preset.");
-        return true;
-      } else {
-        print("Failed loading ROM:", sMouthROM);
-      }
-    } else if (options.genesisVersion === 8.1) {
-      return true;
-    }
-  } else {
+  print("Loading JCM ROM: ", sJcmROM);
+  if (!loadPreset(sJcmROM, oNodeRoot)) {
     print("Failed loading ROM:", sJcmROM);
     print("This is a necessary step. Aborting script.");
+    return false;
   }
-  return false;
+  print("Successfully loaded pose preset.");
+
+  // Load Mouth ROM for G9 with FAC
+  if (options["bIncludeFAC"] && options.genesisVersion === 9) {
+    print("Loading Mouth ROM: ", sMouthROM);
+    setTotalFrames(baseFrameCount);
+    if (!loadPreset(sMouthROM, oNodeMouth)) {
+      print("Failed loading ROM:", sMouthROM);
+      return false;
+    }
+    print("Successfully loaded pose preset.");
+  }
+
+  return true;
 }

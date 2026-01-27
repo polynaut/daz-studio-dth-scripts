@@ -8,13 +8,13 @@ include(dir_self.filePath("utils/modifyJcmRom.dsa"));
 include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
 
 // Special import for your morph animation configs
-include(dir_self.filePath("morphAnimationConfigs/laraG81.dsa"));
+include(dir_self.filePath("morphAnimationConfigs/electraG9.dsa"));
 
 var options = {
   // Path to your daz studio library, always use "/" as the path separator, on mac and windows
-  sPathDazLibrary: "D:/DAZ 3D/Applications/Data/DAZ 3D/My DAZ 3D Library/",
-  sPathCustomDthPoseAssets: "D:/DAZ 3D/Applications/Data/DAZ 3D/My DAZ 3D Library//MyDazToHue/Poses/",
-  genesisVersion: 8.1, // 8.1 or 9
+  sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
+  sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
+  genesisVersion: 9, // 8.1 or 9
   bIncludeFAC: true, // Set true to include the FAC version of the JCM ROM
 
   bIncludeDK: false, // Set true to include the Dicktator ROM
@@ -24,7 +24,7 @@ var options = {
 
   bIncludeGP: true, // Set true to include the Golden Palace ROM
   // Offsets for the fence poses, relative to the first frame of the GP ROM file
-  aGPFenceOffsets: [0, 73, 77, 80],
+  aGPFenceOffsets: [0, 95, 99, 102],
 
   // Miscellaneous (MIS) morphs to apply to the Genesis 8 Anatomical Elements
   // This is only used if bIncludeGP is false, otherwise the Golden Palace ROM will be used
@@ -96,9 +96,16 @@ function applyDTHWorkflow(options) {
   /** JCM + FAC *****************************************************/
   print("Applying default ROMs...");
   if (!applyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
+  print("DEBUG: After default ROMs - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
 
-  modifyJcmRom();
-  addFenceFrameAtEndOfTimeline();
+  // Disabled for debugging - modifyJcmRom();
+  // print("DEBUG: After modifyJcmRom - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+
+  // Add fence frame at end of JCM ROM (only if not using GP, since GP adds its own)
+  if (!options["bIncludeGP"] && !options["bIncludeDK"]) {
+    addFenceFrameAtEndOfTimeline();
+    print("DEBUG: After addFenceFrame - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+  }
 
   /** EXP       *****************************************************/
   if (getEXPControlConfig().length > 0) {
@@ -114,16 +121,11 @@ function applyDTHWorkflow(options) {
     if (!applyDicktator(options, oNodeRoot, oNodeDk9, startFrame)) return false;
   } else if (options["bIncludeGP"]) {
     print("Applying Golden Palace ROMs...");
-
-    // We can generate the animation
-    // -> downside, it's slow but the user is not asked to extend the timeline again
-    addMorphAnimationFrames(oNodeGP, getGENControlConfig());
-
-    // Or we can simply apply an existing pose asset with the full animation
-    // -> downside, this will ask the user again to "extend the timeline with x frames", but it's much faster
-    /*addFramesToAnim();
+    // startFrame is the next frame after JCM ROM ends
     var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
-    applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame);*/
+    print("DEBUG: GP startFrame:", startFrame);
+    if (!applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame)) return false;
+    print("DEBUG: After applyGoldenPalace - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
   }
 
   /** PHY      *****************************************************/

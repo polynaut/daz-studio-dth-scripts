@@ -27,7 +27,10 @@
       "Bash(cmd /c \"fsutil fsinfo drives\")",
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-genesis.ps1\")",
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-charconv.ps1\")",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-vendor.ps1\")"
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Development\\\\daz-studio-dth-scripts\\\\find-vendor.ps1\")",
+      "Bash(pnpm install-dth:dry:*)",
+      "Bash(npm run install-assets:dry:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

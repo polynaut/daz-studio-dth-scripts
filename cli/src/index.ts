@@ -11,7 +11,7 @@ import type { IOptions } from "./common/types.js";
 args
   .option("out", "Override DAZ_SCRIPTS_FOLDER path")
   .option("assets-dir", "Override DAZ_ASSETS_G* path")
-  .option("gen", "Genesis version (3, 8, or 9)", 9)
+  .option("gen", "Genesis version (3, 8, or 9)")
   .option("debug", "Enable debug logging", false)
   .option("dry-run", "Show what would be copied without doing it", false);
 

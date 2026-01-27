@@ -1,4 +1,8 @@
 function applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame) {
+  // GP ROM has ~103 frames (offsets go to 102)
+  var gpFrameCount = 103;
+  var totalFrames = startFrame + gpFrameCount;
+
   print(
     "Setting fence pose for",
     oNodeRoot.objectName,
@@ -7,6 +11,9 @@ function applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame) {
     "to",
     startFrame
   );
+
+  // Set total frames before loading preset
+  setTotalFrames(totalFrames);
   setFencePoses(oNodeRoot, 0, [startFrame]);
 
   if (options.genesisVersion === 8.1) {
@@ -43,4 +50,6 @@ function applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame) {
 
   print("Setting keys to linear interpolation");
   setLinearInterp(oNodeGP);
+
+  return true;
 }

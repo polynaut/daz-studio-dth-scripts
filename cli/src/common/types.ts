@@ -38,6 +38,7 @@ export interface IInstallAssetsConfig {
 export interface IInstallDthConfig {
   dthReleasesFolder: string;
   dazLibFolder: string;
+  dazPluginsFolder: string;
   debug: boolean;
   dryRun: boolean;
 }
