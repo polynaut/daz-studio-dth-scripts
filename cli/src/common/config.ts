@@ -1,5 +1,5 @@
 import { config as loadEnv } from "dotenv";
-import type { IConfig, IInstallAssetsConfig, IInstallDthConfig, IListAssetsConfig, IOptions } from "./types.js";
+import type { IConfig, IInstallDazAssetsConfig, IInstallDazDthConfig, IInstallDazPresetsConfig, IListDazAssetsConfig, IOptions } from "./types.js";
 
 loadEnv();
 
@@ -21,7 +21,7 @@ export function getConfig(options: IOptions): IConfig {
 
 const GENESIS_VERSIONS = [3, 8, 9];
 
-export function getListAssetsConfig(options: IOptions): IListAssetsConfig {
+export function getListDazAssetsConfig(options: IOptions): IListDazAssetsConfig {
   // If --assets-dir is provided, use only that
   if (options.assetsDir) {
     return {
@@ -62,8 +62,8 @@ export function getListAssetsConfig(options: IOptions): IListAssetsConfig {
   };
 }
 
-export function getInstallAssetsConfig(options: IOptions): IInstallAssetsConfig {
-  const listConfig = getListAssetsConfig(options);
+export function getInstallDazAssetsConfig(options: IOptions): IInstallDazAssetsConfig {
+  const listConfig = getListDazAssetsConfig(options);
   const dazLibFolder = options.out || process.env.DAZ_LIB_FOLDER;
 
   if (!dazLibFolder) {
@@ -77,10 +77,11 @@ export function getInstallAssetsConfig(options: IOptions): IInstallAssetsConfig 
     dazLibFolder,
     debug: listConfig.debug,
     dryRun: options.dryRun ?? false,
+    force: options.force ?? false,
   };
 }
 
-export function getInstallDthConfig(options: IOptions): IInstallDthConfig {
+export function getInstallDazDthConfig(options: IOptions): IInstallDazDthConfig {
   const dthReleasesFolder = process.env.DTH_RELEASES_FOLDER;
   const dazLibFolder = options.out || process.env.DAZ_LIB_FOLDER;
   const dazPluginsFolder =
@@ -103,6 +104,30 @@ export function getInstallDthConfig(options: IOptions): IInstallDthConfig {
     dthReleasesFolder,
     dazLibFolder,
     dazPluginsFolder,
+    debug: options.debug ?? false,
+    dryRun: options.dryRun ?? false,
+  };
+}
+
+export function getInstallDazPresetsConfig(options: IOptions): IInstallDazPresetsConfig {
+  const sourceDir = options.assetsDir || process.env.DAZ_PRESETS_SOURCE;
+  const destDir = options.out || process.env.DAZ_PRESETS_DEST;
+
+  if (!sourceDir) {
+    throw new Error(
+      "DAZ_PRESETS_SOURCE not set. Provide --assets-dir option or set DAZ_PRESETS_SOURCE in .env file."
+    );
+  }
+
+  if (!destDir) {
+    throw new Error(
+      "DAZ_PRESETS_DEST not set. Provide --out option or set DAZ_PRESETS_DEST in .env file."
+    );
+  }
+
+  return {
+    sourceDir,
+    destDir,
     debug: options.debug ?? false,
     dryRun: options.dryRun ?? false,
   };

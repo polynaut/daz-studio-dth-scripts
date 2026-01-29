@@ -32,7 +32,11 @@
       "Bash(npm run install-assets:dry:*)",
       "Bash(node -e:*)",
       "Bash(npm install:*)",
-      "Bash(npm run list-assets:*)"
+      "Bash(npm run list-assets:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

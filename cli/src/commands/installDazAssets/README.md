@@ -1,4 +1,4 @@
-# install-assets Command
+# install-daz-assets Command
 
 Scans asset directories for DAZ Studio content and merges them into your DAZ library folder.
 
@@ -6,19 +6,19 @@ Scans asset directories for DAZ Studio content and merges them into your DAZ lib
 
 ```bash
 # Install all assets (requires DAZ_LIB_FOLDER in .env)
-pnpm install-assets
+pnpm install-daz-assets
 
 # Dry run - show what would be copied without copying
-pnpm install-assets:dry
+pnpm install-daz-assets:dry
 
 # Install only Genesis 9 assets
-pnpm install-assets:g9
+pnpm install-daz-assets:g9
 
 # Install with custom output directory
-pnpm install-assets -- --out "D:/My DAZ Library"
+pnpm install-daz-assets -- --out "D:/My DAZ Library"
 
 # Install specific assets directory
-pnpm install-assets -- --assets-dir "D:/Downloads/NewAssets"
+pnpm install-daz-assets -- --assets-dir "D:/Downloads/NewAssets"
 ```
 
 ## Configuration

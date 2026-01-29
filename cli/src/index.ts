@@ -1,11 +1,12 @@
 import args from "args";
-import { getConfig, getInstallAssetsConfig, getInstallDthConfig, getListAssetsConfig } from "./common/config.js";
+import { getConfig, getInstallDazAssetsConfig, getInstallDazDthConfig, getInstallDazPresetsConfig, getListDazAssetsConfig } from "./common/config.js";
 import { logError } from "./common/utils.js";
-import { syncScripts } from "./commands/sync/sync.js";
-import { listAssets } from "./commands/listAssets/listAssets.js";
+import { syncDazDthScripts } from "./commands/syncDazDthScripts/syncDazDthScripts.js";
+import { listDazAssets } from "./commands/listDazAssets/listDazAssets.js";
 import { uninstallDaz } from "./commands/uninstallDaz/uninstallDaz.js";
-import { installAssets } from "./commands/installAssets/installAssets.js";
-import { installDth } from "./commands/installDth/installDth.js";
+import { installDazAssets } from "./commands/installDazAssets/installDazAssets.js";
+import { installDazDth } from "./commands/installDazDth/installDazDth.js";
+import { installDazPresets } from "./commands/installDazPresets/installDazPresets.js";
 import type { IOptions } from "./common/types.js";
 
 args
@@ -13,27 +14,31 @@ args
   .option("assets-dir", "Override DAZ_ASSETS_G* path")
   .option("gen", "Genesis version (3, 8, or 9)")
   .option("debug", "Enable debug logging", false)
-  .option("dry-run", "Show what would be copied without doing it", false);
+  .option("dry-run", "Show what would be copied without doing it", false)
+  .option("force", "Force install even if assets appear already installed", false);
 
 const flags = args.parse(process.argv) as IOptions;
 const command = args.sub[0];
 
 async function run() {
   try {
-    if (command === "list-assets") {
-      const config = getListAssetsConfig(flags);
-      await listAssets(config);
+    if (command === "list-daz-assets") {
+      const config = getListDazAssetsConfig(flags);
+      await listDazAssets(config);
     } else if (command === "uninstall-daz") {
       await uninstallDaz({ dryRun: flags.dryRun ?? false });
-    } else if (command === "install-assets") {
-      const config = getInstallAssetsConfig(flags);
-      await installAssets(config);
-    } else if (command === "install-dth") {
-      const config = getInstallDthConfig(flags);
-      await installDth(config);
+    } else if (command === "install-daz-assets") {
+      const config = getInstallDazAssetsConfig(flags);
+      await installDazAssets(config);
+    } else if (command === "install-daz-dth") {
+      const config = getInstallDazDthConfig(flags);
+      await installDazDth(config);
+    } else if (command === "install-daz-presets") {
+      const config = getInstallDazPresetsConfig(flags);
+      await installDazPresets(config);
     } else {
       const config = getConfig(flags);
-      await syncScripts(config);
+      await syncDazDthScripts(config);
     }
   } catch (error) {
     if (error instanceof Error) {

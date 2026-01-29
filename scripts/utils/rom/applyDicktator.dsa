@@ -5,6 +5,10 @@ function applyDicktator(options, oNodeRoot, oNodeDk9, startFrame) {
     return false;
   }
 
+  // DK ROM has ~53 frames (offsets go to 52)
+  var dkFrameCount = 53;
+  var totalFrames = startFrame + dkFrameCount;
+
   print(
     "Setting fence pose for",
     oNodeRoot.objectName,
@@ -13,6 +17,9 @@ function applyDicktator(options, oNodeRoot, oNodeDk9, startFrame) {
     "to",
     startFrame
   );
+
+  // Set total frames before loading preset
+  setTotalFrames(totalFrames);
   setFencePoses(oNodeRoot, 0, [startFrame]);
 
   var ROMs = getRomPaths(options);
@@ -39,4 +46,6 @@ function applyDicktator(options, oNodeRoot, oNodeDk9, startFrame) {
 
   print("Setting keys to linear interpolation");
   setLinearInterp(oNodeDk9);
+
+  return true;
 }

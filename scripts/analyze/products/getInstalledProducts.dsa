@@ -2,7 +2,7 @@
 // Reads DIM manifest files to list all installed products
 
 var dimManifestPath =
-  "C:/Users/Public/Documents/DAZ 3D/InstallManager/ManifestFiles";
+  "E:/DAZ 3D/Install Manager/ManifestFiles";
 
 // MOVED: extractXMLTag function needs to be declared BEFORE parseManifestFile
 function extractXMLTag(xmlContent, tagName) {
@@ -93,35 +93,31 @@ function getInstalledProducts() {
 
   print("Reading manifest files from: " + dimManifestPath);
 
-  // Get all manifest files
-  var files = dimDir.entryList(DzDir.Files);
+  // Get all entries and filter for .dsx files manually
+  var allEntries = dimDir.entryList();
+  var files = [];
+  for (var e = 0; e < allEntries.length; e++) {
+    var entry = String(allEntries[e]);
+    if (entry.toLowerCase().indexOf(".dsx") !== -1) {
+      files.push(entry);
+    }
+  }
+  print("Found " + files.length + " .dsx manifest files");
+
   var manifestCount = 0;
 
   for (var i = 0; i < files.length; i++) {
     var fileName = String(files[i]);
+    var manifestPath = dimManifestPath + "/" + fileName;
+    var product = parseManifestFile(manifestPath);
 
-    // DIM manifest files are typically .dsx files
-    if (fileName.toLowerCase().endsWith(".dsx")) {
-      var manifestPath = dimManifestPath + "/" + fileName;
-      var product = parseManifestFile(manifestPath);
+    if (product) {
+      products.push(product);
+      manifestCount++;
 
-      if (product) {
-        print(
-          "Found product: " +
-            product.name +
-            " (SKU: " +
-            product.sku +
-            ", Version: " +
-            product.version +
-            ")"
-        );
-        products.push(product);
-        manifestCount++;
-
-        // Print progress every 100 files
-        if (manifestCount % 100 === 0) {
-          print("Processed " + manifestCount + " manifests...");
-        }
+      // Print progress every 100 files
+      if (manifestCount % 100 === 0) {
+        print("Processed " + manifestCount + " manifests...");
       }
     }
   }

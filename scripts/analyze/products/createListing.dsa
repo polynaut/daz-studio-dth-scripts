@@ -8,9 +8,57 @@ include(dir_self.filePath("getUsedAssets.dsa"));
 // Include the matching logic directly in this file for now
 // (You could also put this in a separate file and include it)
 
+// Detect the Genesis version used in the scene
+function detectSceneGenesisVersion(usedAssets) {
+  for (var i = 0; i < usedAssets.length; i++) {
+    var name = usedAssets[i].name.toLowerCase();
+    var techName = usedAssets[i].technicalName.toLowerCase();
+
+    if (name.indexOf("genesis 9") !== -1 || techName.indexOf("genesis9") !== -1) {
+      return 9;
+    }
+    if (name.indexOf("genesis 8.1") !== -1 || techName.indexOf("genesis8_1") !== -1) {
+      return 8.1;
+    }
+    if (name.indexOf("genesis 8") !== -1 || techName.indexOf("genesis8") !== -1) {
+      return 8;
+    }
+  }
+  return 0; // Unknown
+}
+
+// Check if a product name matches a specific Genesis version
+function productMatchesGenesisVersion(productName, version) {
+  var name = productName.toLowerCase();
+  if (version === 9) {
+    return name.indexOf("genesis 9") !== -1 || name.indexOf("g9") !== -1;
+  }
+  if (version === 8.1 || version === 8) {
+    return name.indexOf("genesis 8") !== -1 || name.indexOf("g8") !== -1;
+  }
+  return false;
+}
+
+// Check if a product is for a DIFFERENT Genesis version (mismatch)
+function productIsWrongGenesisVersion(productName, sceneVersion) {
+  var name = productName.toLowerCase();
+  if (sceneVersion === 9) {
+    // If scene is G9, reject products explicitly for G3, G8 (but not G8.1 since some work)
+    if ((name.indexOf("genesis 3") !== -1 || name.indexOf(" g3 ") !== -1) &&
+        name.indexOf("genesis 9") === -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function findProductMatches(usedAssets, installedProducts) {
   var matches = [];
   var unmatched = [];
+
+  // Detect scene Genesis version
+  var sceneGenesisVersion = detectSceneGenesisVersion(usedAssets);
+  print("Detected scene Genesis version: " + (sceneGenesisVersion || "Unknown"));
 
   // Create multiple lookup maps for different matching strategies
   var productNameMap = {};
@@ -65,13 +113,21 @@ function findProductMatches(usedAssets, installedProducts) {
 
     // Strategy 3: Keyword-based fuzzy matching
     if (!matchedProduct) {
-      matchedProduct = findKeywordMatch(asset, productKeywordMap);
+      matchedProduct = findKeywordMatch(asset, productKeywordMap, sceneGenesisVersion);
       if (matchedProduct) {
         matchMethod = "Keyword Match";
       }
     }
 
-    // Strategy 4: Genesis base assets
+    // Strategy 4: Known third-party product matching
+    if (!matchedProduct) {
+      matchedProduct = findThirdPartyMatch(asset, installedProducts);
+      if (matchedProduct) {
+        matchMethod = "Third-Party Match";
+      }
+    }
+
+    // Strategy 5: Genesis base assets
     if (!matchedProduct) {
       matchedProduct = findGenesisBaseMatch(asset, installedProducts);
       if (matchedProduct) {
@@ -135,7 +191,7 @@ function findDirectMatch(asset, productNameMap) {
   return null;
 }
 
-function findKeywordMatch(asset, productKeywordMap) {
+function findKeywordMatch(asset, productKeywordMap, sceneGenesisVersion) {
   var assetKeywords = extractKeywords(asset.name + " " + asset.technicalName);
   var candidateProducts = {};
   var maxScore = 0;
@@ -148,11 +204,22 @@ function findKeywordMatch(asset, productKeywordMap) {
       var products = productKeywordMap[keyword];
       for (var j = 0; j < products.length; j++) {
         var product = products[j];
+
+        // Skip products explicitly for wrong Genesis version
+        if (sceneGenesisVersion && productIsWrongGenesisVersion(product.name, sceneGenesisVersion)) {
+          continue;
+        }
+
         var productId = product.name;
         if (!candidateProducts[productId]) {
           candidateProducts[productId] = { product: product, score: 0 };
         }
         candidateProducts[productId].score++;
+
+        // Bonus score if product matches scene Genesis version
+        if (sceneGenesisVersion && productMatchesGenesisVersion(product.name, sceneGenesisVersion)) {
+          candidateProducts[productId].score += 2;
+        }
       }
     }
   }
@@ -167,6 +234,38 @@ function findKeywordMatch(asset, productKeywordMap) {
 
   // Only return if we have a reasonable confidence (at least 2 keyword matches)
   return maxScore >= 2 ? bestMatch : null;
+}
+
+function findThirdPartyMatch(asset, installedProducts) {
+  var name = asset.name.toLowerCase();
+  var techName = asset.technicalName.toLowerCase();
+
+  // Known third-party product patterns to search for in asset names
+  var knownProducts = [
+    { pattern: "dicktator", searchTerms: ["dicktator"] },
+    { pattern: "goldenpalace", searchTerms: ["golden palace", "goldenpalace"] },
+    { pattern: "golden_palace", searchTerms: ["golden palace", "goldenpalace"] },
+    { pattern: "lva", searchTerms: ["lva "] },
+    { pattern: "pinup", searchTerms: ["pinup", "pin-up", "pin up"] },
+  ];
+
+  for (var k = 0; k < knownProducts.length; k++) {
+    var known = knownProducts[k];
+    if (name.indexOf(known.pattern) !== -1 || techName.indexOf(known.pattern) !== -1) {
+      // Found a known product pattern, search for matching installed product
+      for (var i = 0; i < installedProducts.length; i++) {
+        var product = installedProducts[i];
+        var productName = product.name.toLowerCase();
+        for (var s = 0; s < known.searchTerms.length; s++) {
+          if (productName.indexOf(known.searchTerms[s]) !== -1) {
+            return product;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 function findGenesisBaseMatch(asset, installedProducts) {
@@ -234,18 +333,26 @@ function extractKeywords(text) {
 
   var words = cleaned.split(" ");
 
+  // Common/generic terms to skip - these cause false matches across Genesis versions
+  var stopWords = [
+    "for", "and", "the", "genesis", "female", "male",
+    "body", "morphs", "morph", "proportion", "proportions",
+    "height", "length", "smaller", "larger", "size",
+    "base", "head", "torso", "legs", "arms",
+    "shape", "shapes", "hd", "bs"
+  ];
+
   for (var i = 0; i < words.length; i++) {
     var word = words[i];
-    // Skip very short words and common terms
-    if (
-      word.length > 2 &&
-      word !== "for" &&
-      word !== "and" &&
-      word !== "the" &&
-      word !== "genesis" &&
-      word !== "female" &&
-      word !== "male"
-    ) {
+    // Skip very short words and stop words
+    var isStopWord = false;
+    for (var s = 0; s < stopWords.length; s++) {
+      if (word === stopWords[s]) {
+        isStopWord = true;
+        break;
+      }
+    }
+    if (word.length > 2 && !isStopWord) {
       keywords.push(word);
     }
   }
@@ -291,6 +398,30 @@ function isBoneOrSkeleton(asset) {
     "mid",
     "metatarsal",
     "bigToe",
+    // Additional body parts
+    "chin",
+    "tongue",
+    "root",
+    "crease",
+    // Dicktator/genital bones
+    "shaft",
+    "foreskin",
+    "glans",
+    "urethra",
+    "scrotum",
+    "testicle",
+    "rectum",
+    "anus",
+    // Golden Palace/genital bones
+    "clitoris",
+    "clitzilla",
+    "vagina",
+    "tentacle",
+    "mons",
+    "labium",
+    "labia",
+    // Rendering/display nodes
+    "shell",
   ];
 
   // Check if it's a standard bone name

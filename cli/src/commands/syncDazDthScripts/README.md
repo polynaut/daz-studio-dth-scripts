@@ -1,12 +1,12 @@
-# sync
+# sync-daz-dth-scripts
 
 Copies the DAZ scripts from this repository to your DAZ Studio scripts folder.
 
 ## Usage
 
 ```bash
-pnpm sync          # Copy scripts to DAZ Studio
-pnpm sync:dry      # Preview what would be copied
+pnpm sync-daz-dth-scripts          # Copy scripts to DAZ Studio
+pnpm sync-daz-dth-scripts:dry      # Preview what would be copied
 ```
 
 ## Behavior

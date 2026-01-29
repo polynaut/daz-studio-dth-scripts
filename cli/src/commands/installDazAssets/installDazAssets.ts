@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
-import type { IAssetInfo, IInstallAssetsConfig } from "../../common/types.js";
+import type { IAssetInfo, IInstallDazAssetsConfig } from "../../common/types.js";
 import { log, logDebug } from "../../common/utils.js";
-import { scanAssetsDir } from "../listAssets/listAssets.js";
+import { scanAssetsDir } from "../listDazAssets/listDazAssets.js";
 
 function countFiles(dir: string): number {
   let count = 0;
@@ -30,6 +30,12 @@ function cleanupTempAssets(assets: IAssetInfo[]): void {
   }
 }
 
+function isAssetInstalled(asset: IAssetInfo, dazLibFolder: string): boolean {
+  if (!asset.markerFile) return false;
+  const destPath = path.join(dazLibFolder, asset.markerFile);
+  return fs.existsSync(destPath);
+}
+
 function copyFolder(
   srcFolder: string,
   destFolder: string,
@@ -55,11 +61,15 @@ function copyFolder(
   return fileCount;
 }
 
-export async function installAssets(config: IInstallAssetsConfig): Promise<void> {
-  const { assetSources, dazLibFolder, debug, dryRun } = config;
+export async function installDazAssets(config: IInstallDazAssetsConfig): Promise<void> {
+  const { assetSources, dazLibFolder, debug, dryRun, force } = config;
 
   if (dryRun) {
     log("=== DRY RUN MODE ===\n");
+  }
+
+  if (force) {
+    log("=== FORCE MODE: Ignoring 'already installed' checks ===\n");
   }
 
   log(`Target: ${dazLibFolder}\n`);
@@ -91,10 +101,21 @@ export async function installAssets(config: IInstallAssetsConfig): Promise<void>
   log(`\nProcessing ${allAssets.length} assets in alphabetical order...\n`);
 
   let totalFiles = 0;
-  let processedAssets = 0;
+  let installedAssets = 0;
+  let skippedAssets = 0;
 
-  for (const asset of allAssets) {
-    log(`[${++processedAssets}/${allAssets.length}] ${asset.assetName}`);
+  for (let i = 0; i < allAssets.length; i++) {
+    const asset = allAssets[i];
+    const progress = `[${i + 1}/${allAssets.length}]`;
+
+    // Check if asset is already installed (skip check if --force is used)
+    if (!force && isAssetInstalled(asset, dazLibFolder)) {
+      logDebug(`${progress} ${asset.assetName} - already installed (marker: ${asset.markerFile})`, debug);
+      skippedAssets++;
+      continue;
+    }
+
+    log(`${progress} ${asset.assetName}`);
 
     for (const folder of asset.foundFolders) {
       const srcFolder = path.join(asset.contentPath, folder);
@@ -102,6 +123,7 @@ export async function installAssets(config: IInstallAssetsConfig): Promise<void>
       totalFiles += copyFolder(srcFolder, destFolder, dryRun, debug);
     }
 
+    installedAssets++;
     log("");
   }
 
@@ -109,9 +131,15 @@ export async function installAssets(config: IInstallAssetsConfig): Promise<void>
 
   if (dryRun) {
     log(`=== DRY RUN COMPLETE ===`);
-    log(`Would copy ${totalFiles} files from ${processedAssets} assets.`);
+    log(`Would copy ${totalFiles} files from ${installedAssets} assets.`);
+    if (skippedAssets > 0) {
+      log(`Skipped ${skippedAssets} already installed assets.`);
+    }
   } else {
     log(`=== INSTALL COMPLETE ===`);
-    log(`Copied ${totalFiles} files from ${processedAssets} assets.`);
+    log(`Copied ${totalFiles} files from ${installedAssets} assets.`);
+    if (skippedAssets > 0) {
+      log(`Skipped ${skippedAssets} already installed assets.`);
+    }
   }
 }

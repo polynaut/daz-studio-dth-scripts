@@ -2,10 +2,38 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import AdmZip from "adm-zip";
-import type { IAssetInfo, IListAssetsConfig } from "../../common/types.js";
+import type { IAssetInfo, IListDazAssetsConfig } from "../../common/types.js";
 import { log, logDebug } from "../../common/utils.js";
 
-export const SPECIAL_FOLDERS = ["data", "Documentation", "People", "Runtime"];
+// Content folders contain actual assets; Documentation is metadata only
+export const CONTENT_FOLDERS = ["data", "People", "Runtime"];
+export const METADATA_FOLDERS = ["Documentation"];
+export const SPECIAL_FOLDERS = [...CONTENT_FOLDERS, ...METADATA_FOLDERS];
+
+/**
+ * Recursively find the first file in a directory tree.
+ * Returns the relative path from the starting directory.
+ */
+function findFirstFile(dir: string, relativePath: string = ""): string | null {
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const entryRelative = relativePath
+        ? path.join(relativePath, entry.name)
+        : entry.name;
+      if (entry.isFile()) {
+        return entryRelative;
+      }
+      if (entry.isDirectory()) {
+        const found = findFirstFile(path.join(dir, entry.name), entryRelative);
+        if (found) return found;
+      }
+    }
+  } catch {
+    // Directory doesn't exist or can't be read
+  }
+  return null;
+}
 
 export function findContentLevel(
   dir: string,
@@ -20,12 +48,22 @@ export function findContentLevel(
   }
 
   const subDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
-  const foundSpecial = subDirs.filter((name) => SPECIAL_FOLDERS.includes(name));
+  const foundContent = subDirs.filter((name) => CONTENT_FOLDERS.includes(name));
+  const foundMetadata = subDirs.filter((name) => METADATA_FOLDERS.includes(name));
+  const foundSpecial = [...foundContent, ...foundMetadata];
 
   logDebug(`  Checking ${relativePath}: found [${subDirs.join(", ")}]`, debug);
 
-  if (foundSpecial.length > 0) {
+  // If we found actual content folders (data, People, Runtime), return immediately
+  if (foundContent.length > 0) {
     return { contentPath: relativePath, foundFolders: foundSpecial };
+  }
+
+  // If we only found metadata (Documentation), keep searching subdirectories
+  // for actual content, but remember this level as a fallback
+  let fallbackResult: { contentPath: string; foundFolders: string[] } | null = null;
+  if (foundMetadata.length > 0) {
+    fallbackResult = { contentPath: relativePath, foundFolders: foundMetadata };
   }
 
   // Recursively search subdirectories
@@ -35,11 +73,13 @@ export function findContentLevel(
       relativePath === "." ? subDir : path.join(relativePath, subDir);
     const result = findContentLevel(subPath, debug, subRelative);
     if (result) {
+      // If we found content in a subdirectory, prefer that over metadata-only fallback
       return result;
     }
   }
 
-  return null;
+  // Return metadata-only result as fallback if nothing better was found
+  return fallbackResult;
 }
 
 export function scanZipAsset(
@@ -56,12 +96,24 @@ export function scanZipAsset(
     const result = findContentLevel(tempDir, debug);
 
     if (result) {
+      const contentPath = path.join(tempDir, result.contentPath);
+      // Find a marker file for skip detection
+      let markerFile: string | undefined;
+      for (const folder of result.foundFolders) {
+        const folderPath = path.join(contentPath, folder);
+        const firstFile = findFirstFile(folderPath, folder);
+        if (firstFile) {
+          markerFile = firstFile;
+          break;
+        }
+      }
       return {
         assetName: zipName,
-        contentPath: path.join(tempDir, result.contentPath),
+        contentPath,
         foundFolders: result.foundFolders,
         isTemp: true,
         tempDir,
+        markerFile,
       };
     }
 
@@ -95,10 +147,21 @@ export function scanAssetsDir(
 
     if (result) {
       const absolutePath = path.join(assetsDir, assetName, result.contentPath);
+      // Find a marker file for skip detection
+      let markerFile: string | undefined;
+      for (const folder of result.foundFolders) {
+        const folderPath = path.join(absolutePath, folder);
+        const firstFile = findFirstFile(folderPath, folder);
+        if (firstFile) {
+          markerFile = firstFile;
+          break;
+        }
+      }
       assets.push({
         assetName,
         contentPath: absolutePath,
         foundFolders: result.foundFolders,
+        markerFile,
       });
     } else {
       assets.push({
@@ -129,7 +192,7 @@ export function scanAssetsDir(
   return assets;
 }
 
-export async function listAssets(config: IListAssetsConfig): Promise<void> {
+export async function listDazAssets(config: IListDazAssetsConfig): Promise<void> {
   const { assetSources, debug } = config;
 
   for (const source of assetSources) {

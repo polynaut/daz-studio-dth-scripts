@@ -1,4 +1,4 @@
-# install-dth Command
+# install-daz-dth Command
 
 Installs the latest DazToHue release to the DAZ library folder.
 
@@ -6,10 +6,10 @@ Installs the latest DazToHue release to the DAZ library folder.
 
 ```bash
 # Dry run - show what would be copied
-pnpm install-dth:dry
+pnpm install-daz-dth:dry
 
 # Actually install
-pnpm install-dth
+pnpm install-daz-dth
 ```
 
 ## How It Works

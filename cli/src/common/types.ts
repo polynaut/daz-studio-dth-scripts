@@ -4,6 +4,7 @@ export interface IOptions {
   dryRun?: boolean;
   assetsDir?: string;
   gen?: number;
+  force?: boolean;
 }
 
 export interface IConfig {
@@ -18,6 +19,7 @@ export interface IAssetInfo {
   foundFolders: string[];
   isTemp?: boolean;
   tempDir?: string;
+  markerFile?: string; // relative path to first file (for skip detection)
 }
 
 export interface IAssetSource {
@@ -25,22 +27,30 @@ export interface IAssetSource {
   path: string;
 }
 
-export interface IListAssetsConfig {
+export interface IListDazAssetsConfig {
   assetSources: IAssetSource[];
   debug: boolean;
 }
 
-export interface IInstallAssetsConfig {
+export interface IInstallDazAssetsConfig {
   assetSources: IAssetSource[];
   dazLibFolder: string;
   debug: boolean;
   dryRun: boolean;
+  force: boolean;
 }
 
-export interface IInstallDthConfig {
+export interface IInstallDazDthConfig {
   dthReleasesFolder: string;
   dazLibFolder: string;
   dazPluginsFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}
+
+export interface IInstallDazPresetsConfig {
+  sourceDir: string;
+  destDir: string;
   debug: boolean;
   dryRun: boolean;
 }

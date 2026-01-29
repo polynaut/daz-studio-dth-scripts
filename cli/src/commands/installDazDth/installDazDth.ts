@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import type { IInstallDthConfig } from "../../common/types.js";
+import type { IInstallDazDthConfig } from "../../common/types.js";
 import { log, logDebug } from "../../common/utils.js";
 
 function countFiles(dir: string): number {
@@ -145,7 +145,7 @@ function copyPluginDll(
   return copiedCount;
 }
 
-export async function installDth(config: IInstallDthConfig): Promise<void> {
+export async function installDazDth(config: IInstallDazDthConfig): Promise<void> {
   const { dthReleasesFolder, dazLibFolder, dazPluginsFolder, debug, dryRun } =
     config;
 

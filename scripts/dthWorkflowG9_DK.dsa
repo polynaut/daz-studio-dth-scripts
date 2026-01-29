@@ -1,0 +1,159 @@
+var dir_self = new DzDir(new DzFileInfo(getScriptFileName()).path());
+include(dir_self.filePath("utils/rom/applyDefaultRoms.dsa"));
+include(dir_self.filePath("utils/rom/applyDicktator.dsa"));
+include(dir_self.filePath("utils/rom/applyGoldenPalace.dsa"));
+include(dir_self.filePath("utils/rom/getRomPaths.dsa"));
+include(dir_self.filePath("utils/dthUtils.dsa"));
+include(dir_self.filePath("utils/modifyJcmRom.dsa"));
+include(dir_self.filePath("utils/morphAnimationFrames.dsa"));
+
+// Special import for your morph animation configs
+include(dir_self.filePath("morphAnimationConfigs/mattG9.dsa"));
+
+var options = {
+  // Path to your daz studio library, always use "/" as the path separator, on mac and windows
+  sPathDazLibrary: "D:/DAZ 3D/My DAZ 3D Library/",
+  sPathCustomDthPoseAssets: "D:/DAZ 3D/My DAZ 3D Library/MyDazToHue/Poses/",
+  genesisVersion: 9, // 8.1 or 9
+  bIncludeFAC: true, // Set true to include the FAC version of the JCM ROM
+
+  bIncludeDK: true, // Set true to include the Dicktator ROM
+  // Offsets for the fence poses, relative to the first frame of the DK ROM file
+  aDKFenceOffsets: [0, 33, 39, 46, 47, 49, 52],
+
+  bIncludeGP: false, // Set true to include the Golden Palace ROM
+
+  bDQS: true, // Set true to enable Dual Quaternion Skinning, defaults to Linear
+  FACsDetailStrength: 1, // only used for G9
+  FlexionStrength: 1, // only used for G9
+};
+
+function applyDTHWorkflow(options) {
+  beginUndo();
+
+  Scene.setTime(0);
+
+  var oNodeRoot = Scene.getPrimarySelection();
+  if (!oNodeRoot || !oNodeRoot.inherits("DzNode")) {
+    MessageBox.information(
+      "Error: Node `Genesis 8/9` not found in scene",
+      "",
+      ""
+    );
+    return false;
+  }
+
+  var oNodeMouth = oNodeRoot.findNodeChildByLabel("Genesis 9 Mouth");
+  if (!oNodeMouth && options.bIncludeFAC && options.genesisVersion === 9) {
+    MessageBox.information(
+      "Error: Node `Genesis 9 Mouth` not found in scene",
+      "",
+      ""
+    );
+    return false;
+  }
+  var oNodeDk9 = oNodeRoot.findNodeChildByLabel("DicktatorG9");
+  if (!oNodeDk9 && options.bIncludeDK) {
+    MessageBox.information(
+      "Error: Node `DicktatorG9` not found in scene",
+      "",
+      ""
+    );
+    return false;
+  }
+  var gpName =
+    options.genesisVersion === 9 ? "GoldenPalace_G9" : "Golden Palace Gens";
+  var oNodeGP = oNodeRoot.findNodeChildByLabel(gpName);
+  if (!oNodeGP && options.bIncludeGP) {
+    MessageBox.information(
+      "Error: Node `Golden Palace` not found in scene",
+      "",
+      ""
+    );
+    return false;
+  }
+  /**
+   * Keep the following sections JCM/FAC/EXP/GEN/PHY/FBM/MIS
+   */
+
+  /**       *****************************************************/
+  print("Applying initial values... ");
+  applyInitialValues(options, oNodeRoot);
+
+  /** JCM + FAC *****************************************************/
+  print("Applying default ROMs...");
+  if (!applyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
+  print("DEBUG: After default ROMs - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+
+  // Disabled for debugging - modifyJcmRom();
+  // print("DEBUG: After modifyJcmRom - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+
+  // Add fence frame at end of JCM ROM (only if not using GP, since GP adds its own)
+  if (!options["bIncludeGP"] && !options["bIncludeDK"]) {
+    addFenceFrameAtEndOfTimeline();
+    print("DEBUG: After addFenceFrame - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+  }
+
+  /** EXP       *****************************************************/
+  if (getEXPControlConfig().length > 0) {
+    print("Applying EXP morphs...");
+    addMorphAnimationFrames(oNodeRoot, getEXPControlConfig());
+  }
+
+  /** GEN      *****************************************************/
+  if (options["bIncludeDK"]) {
+    print("Applying Dicktator ROMs...");
+    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
+    if (!applyDicktator(options, oNodeRoot, oNodeDk9, startFrame)) return false;
+  } else if (options["bIncludeGP"]) {
+    print("Applying Golden Palace ROMs...");
+    // startFrame is the next frame after JCM ROM ends
+    var startFrame = Scene.getAnimRange().end / Scene.getTimeStep();
+    print("DEBUG: GP startFrame:", startFrame);
+    if (!applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame)) return false;
+    print("DEBUG: After applyGoldenPalace - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
+  }
+
+  /** PHY      *****************************************************/
+  // TODO: implement this section, just apply another pose asset provided by DTH on G9, on G8.1 we must have a custom one available
+
+  /** FBM      *****************************************************/
+  if (getFBMControlConfig().length > 0) {
+    print("Applying FBM morphs...");
+    addMorphAnimationFrames(oNodeRoot, getFBMControlConfig());
+  }
+
+  /** MIS      *****************************************************/
+  if (getMISControlConfig().length > 0) {
+    print("Applying MIS morphs...");
+    addMorphAnimationFrames(oNodeRoot, getMISControlConfig());
+  }
+
+  if (
+    !options["bIncludeGP"] &&
+    options.oMISConfig &&
+    options.oMISConfig.nodeName &&
+    options.oMISConfig.morphConfigs &&
+    options.oMISConfig.morphConfigs.length > 0
+  ) {
+    print("Applying Genesis MIS morphs to " + options.oMISConfig.nodeName);
+    var oNodeMIS = oNodeRoot.findNodeChildByLabel(options.oMISConfig.nodeName);
+    if (oNodeMIS) {
+      Scene.selectAllNodes(false);
+      oNodeMIS.select(true);
+      addMorphAnimationFrames(oNodeMIS, options.oMISConfig.morphConfigs);
+      oNodeMIS.select(false);
+      oNodeRoot.select(true);
+    }
+  }
+
+  /** ****************************************************************/
+  print("Setting keys to linear interpolation");
+  setLinearInterp(oNodeRoot);
+
+  acceptUndo("DTH Workflow");
+
+  MessageBox.information("DTH Workflow successfully applied!", "", "");
+}
+
+applyDTHWorkflow(options);

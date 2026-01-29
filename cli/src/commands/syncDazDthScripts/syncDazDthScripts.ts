@@ -26,7 +26,7 @@ async function countFiles(dir: string): Promise<number> {
   return count;
 }
 
-export async function syncScripts(config: IConfig): Promise<void> {
+export async function syncDazDthScripts(config: IConfig): Promise<void> {
   const srcPath = join(__dirname, "..", "..", "..", "..", "scripts");
   const destPath = join(config.dazScriptsFolder, DEST_FOLDER_NAME);
 

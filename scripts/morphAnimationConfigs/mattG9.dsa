@@ -1,0 +1,29 @@
+// Array of controls to animate
+// Each entry can be either a single control object or an array of linked control objects
+// Format for each control:
+// {
+//   type: "morph" | "pose",
+//   name: string,
+//   value: number,
+//   reset?: number  // Optional reset value, defaults to 0 if not specified
+// }
+
+function getGENControlConfig() {
+  return [
+  ];
+}
+
+function getMISControlConfig() {
+  return [];
+}
+
+function getEXPControlConfig() {
+  return [
+  ];
+}
+
+function getFBMControlConfig() {
+  return [
+    
+  ];
+}

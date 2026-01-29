@@ -1,12 +1,12 @@
-# list-assets
+# list-daz-assets
 
 Scans asset directories and lists installed DAZ content with their folder structure.
 
 ## Usage
 
 ```bash
-pnpm list-assets           # List all assets
-pnpm list-assets --debug   # Show detailed scanning output
+pnpm list-daz-assets           # List all assets
+pnpm list-daz-assets --debug   # Show detailed scanning output
 ```
 
 ## Behavior
