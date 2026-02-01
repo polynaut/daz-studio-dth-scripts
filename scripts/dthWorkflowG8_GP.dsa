@@ -86,16 +86,24 @@ function applyDTHWorkflow(options) {
     return false;
   }
   /**
+   * IMPORTANT: Store user-modified morphs BEFORE loading any presets.
+   * Presets may reset morphs to default values, so we preserve user settings here.
+   */
+  print("Storing user morph values before preset loading...");
+  var storedMorphs = storeMorphValues(oNodeRoot);
+
+  /**
    * Keep the following sections JCM/FAC/EXP/GEN/PHY/FBM/MIS
    */
-
-  /**       *****************************************************/
-  print("Applying initial values... ");
-  applyInitialValues(options, oNodeRoot);
 
   /** JCM + FAC *****************************************************/
   print("Applying default ROMs...");
   if (!applyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
+
+  /**       *****************************************************/
+  // Apply initial values AFTER ROM loading to avoid affecting JCM/FAC calculations
+  print("Applying initial values... ");
+  applyInitialValues(options, oNodeRoot);
 
   modifyJcmRom();
   addFenceFrameAtEndOfTimeline();
@@ -154,6 +162,13 @@ function applyDTHWorkflow(options) {
   }
 
   /** ****************************************************************/
+  /**
+   * IMPORTANT: Restore user-modified morphs AFTER all presets and fence poses are applied.
+   * This ensures user settings (like "Breasts Up-Down") are preserved.
+   */
+  print("Restoring user morph values...");
+  restoreMorphValues(storedMorphs);
+
   print("Setting keys to linear interpolation");
   setLinearInterp(oNodeRoot);
 

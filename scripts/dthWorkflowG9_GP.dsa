@@ -39,6 +39,11 @@ var options = {
   bDQS: true, // Set true to enable Dual Quaternion Skinning, defaults to Linear
   FACsDetailStrength: 1.0, // only used for G9
   FlexionStrength: 1.0, // only used for G9
+
+  // Morphs to preserve after ROM loading (ROM presets can reset user-set values)
+  preserveMorphs: [
+    { name: "body_ctrl_BreastsUp-Down", keepValue: 1 }
+  ]
 };
 
 function applyDTHWorkflow(options) {
@@ -85,17 +90,22 @@ function applyDTHWorkflow(options) {
     );
     return false;
   }
+
   /**
    * Keep the following sections JCM/FAC/EXP/GEN/PHY/FBM/MIS
    */
 
-  /**       *****************************************************/
-  print("Applying initial values... ");
-  applyInitialValues(options, oNodeRoot);
-
   /** JCM + FAC *****************************************************/
   print("Applying default ROMs...");
   if (!applyDefaultROMs(options, oNodeRoot, oNodeMouth)) return false;
+
+  // Restore any morphs that should be preserved after ROM loading
+  restorePreservedMorphs(oNodeRoot, options.preserveMorphs);
+
+  /**       *****************************************************/
+  // Apply initial values AFTER ROM loading to avoid affecting JCM/FAC calculations
+  print("Applying initial values... ");
+  applyInitialValues(options, oNodeRoot);
   print("DEBUG: After default ROMs - frames:", Scene.getAnimRange().end / Scene.getTimeStep());
 
   // Disabled for debugging - modifyJcmRom();
@@ -134,6 +144,12 @@ function applyDTHWorkflow(options) {
   /** FBM      *****************************************************/
   if (getFBMControlConfig().length > 0) {
     print("Applying FBM morphs...");
+    // Reset GP morph at the start of FBM section (one frame after current timeline end)
+    if (options["bIncludeGP"] && oNodeGP) {
+      var fbmStartFrame = Math.floor(Scene.getAnimRange().end / Scene.getTimeStep()) + 1;
+      print("DEBUG: FBM will start at frame:", fbmStartFrame);
+      resetMorphAtFrame(oNodeGP, "GP_Clitoris_Erection1", fbmStartFrame, 0);
+    }
     addMorphAnimationFrames(oNodeRoot, getFBMControlConfig());
   }
 

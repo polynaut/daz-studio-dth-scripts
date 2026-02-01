@@ -417,8 +417,12 @@ function addMorphAnimationFrames(oNodeRoot, controlConfigs) {
     // Collect all available controls for diagnostics
     allFoundControls = collectAvailableControls(selectedNode);
 
+    // Calculate start frame from the end of current animation range + 1
+    // This ensures new morph sections always start after the previous section ends
+    var animRange = Scene.getAnimRange();
+    var currentFrame = Math.floor(animRange.end / timeStep) + 1;
+
     // Extend timeline if needed
-    var currentFrame = Scene.getFrame();
     var framesNeeded = totalFrames + 1;
     currentFrame = extendTimelineIfNeeded(currentFrame, framesNeeded);
 

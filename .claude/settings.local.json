@@ -36,7 +36,16 @@
       "Bash(npm run build:*)",
       "Bash(npm run:*)",
       "Bash(pnpm build:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "WebSearch",
+      "WebFetch(domain:delorean.daz3d.com)",
+      "WebFetch(domain:www.daz3d.com)",
+      "WebFetch(domain:docs.daz3d.com)",
+      "Bash(pnpm install-houdini-dth:dry:*)",
+      "Bash(pnpm install-houdini-dth:*)",
+      "Bash(pnpm install-houdini-presets:dry:*)",
+      "Bash(pnpm install-houdini-presets:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

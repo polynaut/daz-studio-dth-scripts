@@ -18,7 +18,13 @@
     "install-daz-dth": "tsx src/index.ts install-daz-dth",
     "install-daz-dth:dry": "tsx src/index.ts install-daz-dth --dry-run",
     "install-daz-presets": "tsx src/index.ts install-daz-presets",
-    "install-daz-presets:dry": "tsx src/index.ts install-daz-presets --dry-run"
+    "install-daz-presets:dry": "tsx src/index.ts install-daz-presets --dry-run",
+    "install-houdini-dth": "tsx src/index.ts install-houdini-dth",
+    "install-houdini-dth:dry": "tsx src/index.ts install-houdini-dth --dry-run",
+    "install-houdini-presets": "tsx src/index.ts install-houdini-presets",
+    "install-houdini-presets:dry": "tsx src/index.ts install-houdini-presets --dry-run",
+    "sync-sol-scripts": "tsx src/index.ts sync-sol-scripts",
+    "sync-sol-scripts:dry": "tsx src/index.ts sync-sol-scripts --dry-run"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

@@ -54,3 +54,24 @@ export interface IInstallDazPresetsConfig {
   debug: boolean;
   dryRun: boolean;
 }
+
+export interface IInstallHoudiniDthConfig {
+  dthReleasesFolder: string;
+  houdiniFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}
+
+export interface IInstallHoudiniPresetsConfig {
+  sourceDir: string;
+  houdiniFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}
+
+export interface ISyncSolScriptsConfig {
+  solScriptsFolder: string;
+  dazScriptsFolder: string;
+  debug: boolean;
+  dryRun: boolean;
+}

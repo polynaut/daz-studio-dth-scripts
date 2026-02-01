@@ -1,5 +1,5 @@
 import args from "args";
-import { getConfig, getInstallDazAssetsConfig, getInstallDazDthConfig, getInstallDazPresetsConfig, getListDazAssetsConfig } from "./common/config.js";
+import { getConfig, getInstallDazAssetsConfig, getInstallDazDthConfig, getInstallDazPresetsConfig, getInstallHoudiniDthConfig, getInstallHoudiniPresetsConfig, getListDazAssetsConfig, getSyncSolScriptsConfig } from "./common/config.js";
 import { logError } from "./common/utils.js";
 import { syncDazDthScripts } from "./commands/syncDazDthScripts/syncDazDthScripts.js";
 import { listDazAssets } from "./commands/listDazAssets/listDazAssets.js";
@@ -7,6 +7,9 @@ import { uninstallDaz } from "./commands/uninstallDaz/uninstallDaz.js";
 import { installDazAssets } from "./commands/installDazAssets/installDazAssets.js";
 import { installDazDth } from "./commands/installDazDth/installDazDth.js";
 import { installDazPresets } from "./commands/installDazPresets/installDazPresets.js";
+import { installHoudiniDth } from "./commands/installHoudiniDth/installHoudiniDth.js";
+import { installHoudiniPresets } from "./commands/installHoudiniPresets/installHoudiniPresets.js";
+import { syncSolScripts } from "./commands/syncSolScripts/syncSolScripts.js";
 import type { IOptions } from "./common/types.js";
 
 args
@@ -36,6 +39,15 @@ async function run() {
     } else if (command === "install-daz-presets") {
       const config = getInstallDazPresetsConfig(flags);
       await installDazPresets(config);
+    } else if (command === "install-houdini-dth") {
+      const config = getInstallHoudiniDthConfig(flags);
+      await installHoudiniDth(config);
+    } else if (command === "install-houdini-presets") {
+      const config = getInstallHoudiniPresetsConfig(flags);
+      await installHoudiniPresets(config);
+    } else if (command === "sync-sol-scripts") {
+      const config = getSyncSolScriptsConfig(flags);
+      await syncSolScripts(config);
     } else {
       const config = getConfig(flags);
       await syncDazDthScripts(config);

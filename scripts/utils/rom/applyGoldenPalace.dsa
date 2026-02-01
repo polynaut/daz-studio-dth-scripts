@@ -3,18 +3,11 @@ function applyGoldenPalace(options, oNodeRoot, oNodeGP, startFrame) {
   var gpFrameCount = 103;
   var totalFrames = startFrame + gpFrameCount;
 
-  print(
-    "Setting fence pose for",
-    oNodeRoot.objectName,
-    "from frame",
-    0,
-    "to",
-    startFrame
-  );
-
   // Set total frames before loading preset
   setTotalFrames(totalFrames);
-  setFencePoses(oNodeRoot, 0, [startFrame]);
+
+  // NOTE: Removed fence pose for oNodeRoot as it was interfering with ROM morph animations.
+  // The GP ROM loads onto oNodeGP, not oNodeRoot, so the root fence pose is not necessary.
 
   if (options.genesisVersion === 8.1) {
     var ROMs = getRomPaths(options);

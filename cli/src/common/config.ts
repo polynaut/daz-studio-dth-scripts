@@ -1,5 +1,5 @@
 import { config as loadEnv } from "dotenv";
-import type { IConfig, IInstallDazAssetsConfig, IInstallDazDthConfig, IInstallDazPresetsConfig, IListDazAssetsConfig, IOptions } from "./types.js";
+import type { IConfig, IInstallDazAssetsConfig, IInstallDazDthConfig, IInstallDazPresetsConfig, IInstallHoudiniDthConfig, IInstallHoudiniPresetsConfig, IListDazAssetsConfig, IOptions, ISyncSolScriptsConfig } from "./types.js";
 
 loadEnv();
 
@@ -128,6 +128,78 @@ export function getInstallDazPresetsConfig(options: IOptions): IInstallDazPreset
   return {
     sourceDir,
     destDir,
+    debug: options.debug ?? false,
+    dryRun: options.dryRun ?? false,
+  };
+}
+
+export function getInstallHoudiniDthConfig(options: IOptions): IInstallHoudiniDthConfig {
+  const dthReleasesFolder = process.env.DTH_RELEASES_FOLDER;
+  const houdiniFolder = options.out || process.env.HOUDINI_FOLDER;
+
+  if (!dthReleasesFolder) {
+    throw new Error(
+      "DTH_RELEASES_FOLDER not set. Set DTH_RELEASES_FOLDER in .env file."
+    );
+  }
+
+  if (!houdiniFolder) {
+    throw new Error(
+      "HOUDINI_FOLDER not set. Provide --out option or set HOUDINI_FOLDER in .env file."
+    );
+  }
+
+  return {
+    dthReleasesFolder,
+    houdiniFolder,
+    debug: options.debug ?? false,
+    dryRun: options.dryRun ?? false,
+  };
+}
+
+export function getInstallHoudiniPresetsConfig(options: IOptions): IInstallHoudiniPresetsConfig {
+  const sourceDir = options.assetsDir || process.env.HOUDINI_PRESETS_SOURCE;
+  const houdiniFolder = options.out || process.env.HOUDINI_FOLDER;
+
+  if (!sourceDir) {
+    throw new Error(
+      "HOUDINI_PRESETS_SOURCE not set. Provide --assets-dir option or set HOUDINI_PRESETS_SOURCE in .env file."
+    );
+  }
+
+  if (!houdiniFolder) {
+    throw new Error(
+      "HOUDINI_FOLDER not set. Provide --out option or set HOUDINI_FOLDER in .env file."
+    );
+  }
+
+  return {
+    sourceDir,
+    houdiniFolder,
+    debug: options.debug ?? false,
+    dryRun: options.dryRun ?? false,
+  };
+}
+
+export function getSyncSolScriptsConfig(options: IOptions): ISyncSolScriptsConfig {
+  const solScriptsFolder = process.env.SOL_SCRIPTS_FOLDER;
+  const dazScriptsFolder = options.out || process.env.DAZ_SCRIPTS_FOLDER;
+
+  if (!solScriptsFolder) {
+    throw new Error(
+      "SOL_SCRIPTS_FOLDER not set. Set SOL_SCRIPTS_FOLDER in .env file."
+    );
+  }
+
+  if (!dazScriptsFolder) {
+    throw new Error(
+      "DAZ_SCRIPTS_FOLDER not set. Provide --out option or set DAZ_SCRIPTS_FOLDER in .env file."
+    );
+  }
+
+  return {
+    solScriptsFolder,
+    dazScriptsFolder,
     debug: options.debug ?? false,
     dryRun: options.dryRun ?? false,
   };

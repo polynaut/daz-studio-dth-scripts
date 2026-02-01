@@ -105,7 +105,9 @@ function addFramesToAnim(iNewFrames) {
 
 /**
  * Creates fence poses by memorizing a figure's state at a source frame
- * and restoring it at specified target frames
+ * and restoring it at specified target frames.
+ * WARNING: This affects ALL properties including morphs. Use setFencePosesTransformsOnly
+ * for the root figure to avoid interfering with ROM morph animations.
  * @param {DzNode} oNode - Node to set fence poses for
  * @param {number} iSourceFrame - Source frame to memorize
  * @param {number[]} aTargetFrames - Array of target frames to restore to
@@ -124,6 +126,80 @@ function setFencePoses(oNode, iSourceFrame, aTargetFrames) {
       Scene.setTime(frame * timeStep);
       print("Restoring figure for:", oNode.getLabel(), "at frame", frame);
       triggerAction("DzRestoreFigureAction");
+    }
+  }
+}
+
+/**
+ * Creates fence poses for bone transforms only (position, rotation, scale).
+ * This avoids interfering with morph animations from ROM presets.
+ * @param {DzNode} oNode - Root node of the figure
+ * @param {number} iSourceFrame - Source frame to copy transforms from
+ * @param {number[]} aTargetFrames - Array of target frames to set transforms at
+ */
+function setFencePosesTransformsOnly(oNode, iSourceFrame, aTargetFrames) {
+  var timeStep = Scene.getTimeStep();
+  var sourceTime = iSourceFrame * timeStep;
+
+  // Collect all skeleton nodes (bones) in the figure
+  var bones = [];
+  collectBonesRecursive(oNode, bones);
+
+  print("Setting transform-only fence poses for", bones.length, "bones from frame", iSourceFrame);
+
+  // For each target frame, copy the transform values from the source frame
+  for (var i = 0; i < aTargetFrames.length; i++) {
+    var targetFrame = aTargetFrames[i];
+    var targetTime = targetFrame * timeStep;
+
+    for (var b = 0; b < bones.length; b++) {
+      var bone = bones[b];
+      copyBoneTransforms(bone, sourceTime, targetTime);
+    }
+
+    verbose("Set transform fence pose at frame", targetFrame);
+  }
+}
+
+/**
+ * Recursively collects all bone nodes under a root node
+ * @param {DzNode} oNode - Current node to process
+ * @param {Array} bones - Array to collect bones into
+ */
+function collectBonesRecursive(oNode, bones) {
+  // Add this node if it's a bone (has a skeleton or is part of one)
+  if (oNode.inherits("DzBone") || oNode.inherits("DzSkeleton") || oNode.getSkeleton()) {
+    bones.push(oNode);
+  }
+
+  // Recurse into child nodes
+  var numChildren = oNode.getNumNodeChildren();
+  for (var i = 0; i < numChildren; i++) {
+    var child = oNode.getNodeChild(i);
+    collectBonesRecursive(child, bones);
+  }
+}
+
+/**
+ * Copies transform properties (position, rotation, scale) from source time to target time
+ * @param {DzNode} oNode - Node to copy transforms for
+ * @param {number} sourceTime - Source time to copy from
+ * @param {number} targetTime - Target time to copy to
+ */
+function copyBoneTransforms(oNode, sourceTime, targetTime) {
+  // Transform property names to copy
+  var transformProps = [
+    "XTranslate", "YTranslate", "ZTranslate",
+    "XRotate", "YRotate", "ZRotate",
+    "XScale", "YScale", "ZScale"
+  ];
+
+  for (var i = 0; i < transformProps.length; i++) {
+    var propName = transformProps[i];
+    var prop = oNode.findProperty(propName);
+    if (prop && prop.inherits("DzFloatProperty")) {
+      var sourceValue = prop.getValue(sourceTime);
+      prop.setValue(targetTime, sourceValue);
     }
   }
 }
@@ -732,6 +808,282 @@ function approx_eq(fValue1, fValue2) {
 }
 
 /**
+ * Checks if a morph/property name indicates it's animated by the ROM preset.
+ * These morphs should NOT be stored/restored as they're managed by the JCM/FAC system.
+ * @param {string} name - The morph/property name or label
+ * @returns {boolean} True if this is a ROM-animated morph
+ */
+function isRomAnimatedMorph(name) {
+  if (!name) return false;
+  var lowerName = name.toLowerCase();
+
+  // Patterns that indicate ROM-animated morphs (JCM, FACS, eye controls, etc.)
+  var romPatterns = [
+    "eye",           // Eye morphs (Eye Look Out Left, etc.)
+    "facs",          // FACS controls
+    "look",          // Look controls
+    "blink",         // Blink controls
+    "brow",          // Eyebrow controls
+    "lid",           // Eyelid controls
+    "pupil",         // Pupil controls
+    "mouth",         // Mouth controls (might be FAC)
+    "lip",           // Lip controls
+    "jaw",           // Jaw controls
+    "tongue",        // Tongue controls
+    "cheek",         // Cheek controls
+    "nose",          // Nose controls
+    "neck",          // Neck JCM
+    "collar",        // Collar JCM
+    "shoulder",      // Shoulder JCM
+    "pectoral",      // Pectoral JCM
+    "jcm",           // Explicit JCM morphs
+    "mcm",           // MCM morphs
+    "flexion",       // Flexion controls
+    "adjust",        // Adjustment morphs
+    "corrective"     // Corrective morphs
+  ];
+
+  for (var i = 0; i < romPatterns.length; i++) {
+    if (lowerName.indexOf(romPatterns[i]) !== -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Stores all morph and property values from a node, tracking which were static (no keyframes).
+ * This should be called BEFORE loading any presets to preserve user-configured values.
+ * All morphs with non-default values are stored, and will be flattened to their original
+ * values in restoreMorphValues (even if ROM presets create animation for them).
+ * @param {DzNode} oNode - Node to store values from
+ * @returns {Array} Array of stored property data objects
+ */
+function storeMorphValues(oNode) {
+  var storedMorphs = [];
+
+  // Store node properties (like Breasts Up-Down controls)
+  var numProps = oNode.getNumProperties();
+  print("Scanning", numProps, "node properties...");
+
+  for (var i = 0; i < numProps; i++) {
+    var oProp = oNode.getProperty(i);
+    if (oProp && oProp.inherits("DzFloatProperty")) {
+      var propName = oProp.getName();
+      var propLabel = oProp.getLabel();
+
+      var value = oProp.getValue(0);
+      var numKeys = oProp.getNumKeys();
+      var defaultValue = 0;
+      if (typeof oProp.getDefaultValue === "function") {
+        defaultValue = oProp.getDefaultValue();
+      }
+
+      // Only store properties that have non-default values
+      if (Math.abs(value - defaultValue) > EPSILON) {
+        storedMorphs.push({
+          name: propName,
+          label: propLabel,
+          value: value,
+          wasStatic: numKeys <= 1,
+          property: oProp
+        });
+        print("Stored property:", propLabel, "=", value, "(static:", numKeys <= 1, ")");
+      }
+    }
+  }
+
+  // Also store morphs from modifiers
+  var oObj = oNode.getObject();
+  if (oObj) {
+    var numModifiers = oObj.getNumModifiers();
+    print("Scanning", numModifiers, "modifiers...");
+
+    for (var i = 0; i < numModifiers; i++) {
+      var oMod = oObj.getModifier(i);
+      if (oMod && oMod.inherits("DzMorph")) {
+        var modName = oMod.getName();
+        var modLabel = oMod.getLabel();
+
+        var oProp = oMod.getValueChannel(0);
+        if (oProp) {
+          var value = oProp.getValue(0);
+          var numKeys = oProp.getNumKeys();
+          var defaultValue = 0;
+          if (typeof oProp.getDefaultValue === "function") {
+            defaultValue = oProp.getDefaultValue();
+          }
+
+          // Only store morphs that have non-default values
+          if (Math.abs(value - defaultValue) > EPSILON) {
+            storedMorphs.push({
+              name: modName,
+              label: modLabel,
+              value: value,
+              wasStatic: numKeys <= 1,
+              property: oProp
+            });
+            print("Stored morph:", modLabel, "=", value, "(static:", numKeys <= 1, ")");
+          }
+        }
+      }
+    }
+  }
+
+  print("Total stored:", storedMorphs.length, "user-modified properties/morphs");
+  return storedMorphs;
+}
+
+/**
+ * Restores previously stored morph values.
+ * For morphs that were originally static, ALL keyframes are set to the original value,
+ * making the morph constant throughout the animation (regardless of ROM preset animations).
+ * @param {Array} storedMorphs - Array of stored morph data from storeMorphValues()
+ */
+function restoreMorphValues(storedMorphs) {
+  if (!storedMorphs || storedMorphs.length === 0) {
+    print("No morphs to restore");
+    return;
+  }
+
+  print("Restoring", storedMorphs.length, "user-modified morphs...");
+
+  for (var i = 0; i < storedMorphs.length; i++) {
+    var morphData = storedMorphs[i];
+    var oProp = morphData.property;
+
+    if (!oProp) {
+      print("Warning: Property not found for morph:", morphData.label);
+      continue;
+    }
+
+    var numKeys = oProp.getNumKeys();
+
+    if (morphData.wasStatic) {
+      // Morph was originally static (0-1 keyframes)
+      // Flatten ALL keyframes to the original value, regardless of how many there are now
+      // This ensures user-set static values are preserved even if ROM created animation
+      var fixedKeys = 0;
+
+      if (numKeys > 0) {
+        for (var k = 0; k < numKeys; k++) {
+          var keyTime = oProp.getKeyTime(k);
+          var currentValue = oProp.getValue(keyTime);
+          // Only overwrite if value changed
+          if (Math.abs(currentValue - morphData.value) > EPSILON) {
+            oProp.setValue(keyTime, morphData.value);
+            fixedKeys++;
+          }
+        }
+        if (fixedKeys > 0) {
+          print("Restored static morph:", morphData.label, "=", morphData.value, "(fixed", fixedKeys, "of", numKeys, "keyframes)");
+        }
+      } else {
+        // No keyframes - check if static value changed
+        var currentValue = oProp.getValue();
+        if (Math.abs(currentValue - morphData.value) > EPSILON) {
+          oProp.setValue(morphData.value);
+          print("Restored static morph:", morphData.label, "=", morphData.value);
+        }
+      }
+    } else {
+      // Morph had keyframes originally - just ensure frame 0 has the correct value
+      // (User may have animated this morph intentionally)
+      oProp.setValue(0, morphData.value);
+      verbose("Restored animated morph at frame 0:", morphData.label, "=", morphData.value);
+    }
+  }
+
+  print("Morph restoration complete");
+}
+
+/**
+ * Resets a morph to a value at a specific frame on a given node
+ * @param {DzNode} oNode - Node containing the morph
+ * @param {string} sMorphName - Name of the morph to reset
+ * @param {number} iFrame - Frame to set the value at
+ * @param {number} [fValue=0] - Value to set (defaults to 0)
+ * @returns {boolean} Success status
+ */
+function resetMorphAtFrame(oNode, sMorphName, iFrame, fValue) {
+  fValue = typeof fValue !== "undefined" ? fValue : 0;
+  var oProp = getMorphPropFromNode(oNode, sMorphName);
+  if (!oProp) {
+    // Try finding by label
+    var oObj = oNode.getObject();
+    if (oObj) {
+      for (var m = 0; m < oObj.getNumModifiers(); m++) {
+        var mod = oObj.getModifier(m);
+        if (mod.getLabel() === sMorphName) {
+          oProp = mod.getValueChannel(0);
+          break;
+        }
+      }
+    }
+  }
+  if (oProp) {
+    var timeStep = Scene.getTimeStep();
+    oProp.setValue(iFrame * timeStep, fValue, DzProperty.Linear);
+    print("Reset morph", sMorphName, "on", oNode.getLabel(), "to", fValue, "at frame", iFrame);
+    return true;
+  } else {
+    print("Warning: Could not find morph", sMorphName, "on node", oNode.getLabel());
+    return false;
+  }
+}
+
+/**
+ * Flattens a morph to a constant value across all existing keyframes.
+ * Use this to preserve user-set static values for morphs that the ROM might animate.
+ * @param {DzNode} oNode - Node containing the morph
+ * @param {string} sMorphName - Name or label of the morph to flatten
+ * @param {number} fValue - Value to set across all keyframes
+ * @returns {boolean} Success status
+ */
+function flattenMorphToValue(oNode, sMorphName, fValue) {
+  var oProp = getMorphPropFromNode(oNode, sMorphName);
+  if (!oProp) {
+    // Try finding by label
+    var oObj = oNode.getObject();
+    if (oObj) {
+      for (var m = 0; m < oObj.getNumModifiers(); m++) {
+        var mod = oObj.getModifier(m);
+        if (mod.getLabel() === sMorphName || mod.getName() === sMorphName) {
+          oProp = mod.getValueChannel(0);
+          break;
+        }
+      }
+    }
+  }
+  // Also try finding as a node property
+  if (!oProp) {
+    oProp = oNode.findProperty(sMorphName);
+    if (!oProp) {
+      oProp = oNode.findPropertyByLabel(sMorphName);
+    }
+  }
+
+  if (oProp && oProp.inherits("DzFloatProperty")) {
+    var numKeys = oProp.getNumKeys();
+    if (numKeys > 0) {
+      for (var k = 0; k < numKeys; k++) {
+        var keyTime = oProp.getKeyTime(k);
+        oProp.setValue(keyTime, fValue);
+      }
+      print("Flattened morph", sMorphName, "to", fValue, "across", numKeys, "keyframes");
+    } else {
+      // No keyframes, just set the static value
+      oProp.setValue(fValue);
+      print("Set static morph", sMorphName, "to", fValue);
+    }
+    return true;
+  } else {
+    print("Warning: Could not find morph", sMorphName, "on node", oNode.getLabel());
+    return false;
+  }
+}
+
+/**
  * Applies initial values to the given node based on the provided options.
  *
  * @param {Object} options - Configuration options for applying initial values.
@@ -757,6 +1109,47 @@ function applyInitialValues(options, oNodeRoot) {
         options["FACsDetailStrength"],
         0
       );
+    }
+  }
+}
+
+/**
+ * Restores morphs specified in options.preserveMorphs to their keepValue.
+ * This is used to preserve specific user-set morphs after ROM loading.
+ * @param {DzNode} oNodeRoot - Root node containing the morphs
+ * @param {Array} preserveMorphs - Array of objects: [{ name: "body_ctrl_BreastsUp-Down", keepValue: 1 }, ...]
+ */
+function restorePreservedMorphs(oNodeRoot, preserveMorphs) {
+  if (!preserveMorphs || preserveMorphs.length === 0) {
+    return;
+  }
+
+  for (var i = 0; i < preserveMorphs.length; i++) {
+    var config = preserveMorphs[i];
+    if (!config.name) continue;
+
+    var oProp = oNodeRoot.findProperty(config.name);
+    if (!oProp) {
+      oProp = oNodeRoot.findPropertyByLabel(config.name);
+    }
+    if (!oProp) {
+      oProp = getMorphPropFromNode(oNodeRoot, config.name);
+    }
+
+    if (oProp) {
+      // Set all keyframes to keepValue (flattens the animation to constant)
+      var numKeys = oProp.getNumKeys();
+      if (numKeys > 0) {
+        for (var k = 0; k < numKeys; k++) {
+          var keyTime = oProp.getKeyTime(k);
+          oProp.setValue(keyTime, config.keepValue);
+        }
+      } else {
+        oProp.setValue(config.keepValue);
+      }
+      print("Restored preserved morph:", config.name, "to", config.keepValue);
+    } else {
+      print("WARNING: Could not find preserved morph:", config.name);
     }
   }
 }

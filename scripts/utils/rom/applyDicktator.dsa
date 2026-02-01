@@ -9,18 +9,11 @@ function applyDicktator(options, oNodeRoot, oNodeDk9, startFrame) {
   var dkFrameCount = 53;
   var totalFrames = startFrame + dkFrameCount;
 
-  print(
-    "Setting fence pose for",
-    oNodeRoot.objectName,
-    "from frame",
-    0,
-    "to",
-    startFrame
-  );
-
   // Set total frames before loading preset
   setTotalFrames(totalFrames);
-  setFencePoses(oNodeRoot, 0, [startFrame]);
+
+  // NOTE: Removed fence pose for oNodeRoot as it was interfering with ROM morph animations.
+  // The DK ROM loads onto oNodeDk9, not oNodeRoot, so the root fence pose is not necessary.
 
   var ROMs = getRomPaths(options);
   var ROM_DK9 = ROMs.RomDK9;
